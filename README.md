@@ -19,27 +19,28 @@ o mesmo nome que a Central usa) e **Equipe** (quem entra e com que papel).
 
 ## Etapas
 
-1. **Base** (esta): banco, login, cadastro com aprovacao, as duas abas com a
+1. **Base**: banco, login, cadastro com aprovacao, as duas abas com a
    estrutura e o historico, Empreendimentos e Equipe.
-2. **Enviar**: o formulario completo (empreendimento, etapa, percentual,
-   texto, data, fotos no Storage), com edicao enquanto aguarda.
-3. **Aprovar**: abrir cada atualizacao com as fotos, aprovar, pedir ajuste ou
-   recusar com observacao, linha do tempo, marcar etapa concluida.
+2. **Enviar** (esta): a ficha completa (empreendimento, etapa, percentual,
+   texto, data, fotos no Storage), edicao enquanto aguarda ou esta em
+   ajuste, linha do tempo, filtro da fila por situacao.
+3. **Aprovar**: aprovar, pedir ajuste ou recusar com observacao, marcar
+   etapa concluida.
 4. **Central lendo as aprovadas**: a pagina "Evolucao da obra" deixa de ser
    demonstracao e passa a mostrar as atualizacoes aprovadas do empreendimento
    da casa do cliente (as travas para isso ja estao no `sql/001_obras.sql`).
 5. Aviso ao cliente quando sai atualizacao nova; aviso ao aprovador quando a
    obra envia.
 
-## O que a etapa 1 tem
+## O que ja tem (etapas 1 e 2)
 
 | Tela | O que faz |
 |---|---|
 | Entrar | E-mail e senha do Supabase; "Esqueci a senha" manda o link de recuperacao |
 | Criar conta | Nome, e-mail, senha e papel (obra, aprovador, gestor). O **primeiro** cadastro vira gestor na hora; os seguintes ficam **aguardando liberacao** de um gestor |
 | Sem acesso | Login que existe mas nao esta na equipe do painel (um cliente da Central, por exemplo) ve so esta tela |
-| Enviar atualizacao | Resumo (obras em acompanhamento, enviadas por voce, aguardando, aprovadas) e a tabela do que voce enviou. O botao "Nova atualizacao" entra na etapa 2 |
-| Aprovar | Resumo (aguardando, aprovadas, com ajuste, recusadas, obras) e a fila de aguardando, com quem enviou e quando. Aviso de cadastros aguardando liberacao (gestor) |
+| Enviar atualizacao | Resumo (obras em acompanhamento, enviadas por voce, aguardando, aprovadas) e a tabela do que voce enviou, com a contagem de fotos. "Nova atualizacao" abre a **ficha**: empreendimento (so os em acompanhamento), etapa da obra (a "em andamento" ja vem escolhida), titulo, texto, andamento geral em %, data (hoje) e ate 10 fotos, da galeria ou da camera. Tocar numa linha abre a ficha: **editavel** enquanto aguarda ou esta em ajuste (texto e fotos; ao reenviar volta para a fila), **so leitura** depois de aprovada ou recusada. Em ajuste, a observacao do aprovador aparece no alto. Excluir enquanto aguarda. Linha do tempo ao lado |
+| Aprovar | Resumo (aguardando, aprovadas, com ajuste, recusadas, obras) e a fila, com filtro por situacao (aguardando por padrao, ajuste, aprovadas, recusadas, todas), quem enviou e quando. Tocar na linha abre a ficha so para ver, com as fotos e a linha do tempo. Aviso de cadastros aguardando liberacao (gestor). A decisao (aprovar, ajuste, recusar) entra na etapa 3 |
 | Empreendimentos | Lista e cadastro: nome (igual ao da Central), cidade, inicio da obra, previsao de entrega, situacao, observacoes. Todo empreendimento novo nasce com quatro etapas padrao (Fundacao e terraplenagem, Estrutura e alvenaria, Instalacoes e acabamento, Paisagismo e entrega) |
 | Equipe | Quem usa o painel e com que papel; o gestor libera ou recusa os cadastros novos (ajustando o papel antes, se quiser), troca o papel e desativa (nunca apaga) |
 
@@ -113,6 +114,17 @@ ela e feita para o navegador e, sem login, nao abre nada.
   navegador funciona. A aba padrao e Aprovar para quem aprova e Enviar para
   quem esta na obra. O script le o perfil de quem entrou e esconde o que a
   pessoa nao pode fazer; a trava de verdade e o RLS.
+- **As fotos**: cada uma e reduzida no navegador (lado maior em 1600px,
+  JPEG) antes de subir, para nao pesar no 4G da obra; se o navegador nao
+  conseguir ler a imagem (um HEIC, por exemplo), sobe como veio. Sobem uma a
+  uma, com o progresso na tela, para o bucket `obras` do Storage, no caminho
+  `<user_id>/<atualizacao_id>/<ordem>-<momento>.jpg`: a primeira pasta e o
+  proprio `user_id`, e e isso que a politica do Storage exige. Cada arquivo
+  vira uma linha em `obras_fotos`. Se uma foto falhar, a atualizacao fica
+  gravada e o aviso diz qual nao subiu, para abrir e tentar de novo. Tirar
+  uma foto existente apaga o arquivo do Storage e a linha. O bucket e
+  publico para leitura: a foto aprovada aparece na Central pelo endereco
+  direto.
 - `sql/001_obras.sql`:
   - `obras_perfis` (papel gestor, aprovador, obra; ativo; aprovado_em),
     funcoes `obras_papel()`, `obras_tem_acesso()`, `obras_e_gestor()`,
@@ -146,8 +158,18 @@ ela e feita para o navegador e, sem login, nao abre nada.
   repetido), empreendimentos (cadastro com as etapas padrao, edicao, exclusao
   so sem atualizacoes, erro legivel de nome repetido), equipe (troca de papel,
   desativar, reativar).
+- A ficha no DOM falso, com um Storage de mentira que imita as politicas do
+  bucket: obra envia com fotos (validacoes, arquivo que nao e foto recusado,
+  caminho na pasta do proprio user_id, linha em `obras_fotos`), ve a aprovada
+  so para ler (fotos pelo endereco publico, linha do tempo), exclui a que
+  aguarda; ajuste pedido (observacao na tela, tira a foto antiga, poe novas,
+  reenvia e volta para aguardando pelo gatilho imitado); aprovador (filtro
+  da fila, ficha de outra pessoa so para ver, foto que nao sobe avisando sem
+  perder a atualizacao); sem obra em acompanhamento o botao fica desligado.
 - Navegador (puppeteer) em 1440 e 390 com o Supabase de mentira servido no
-  lugar do CDN: telas fotografadas, nada vazando, toque de 44px no celular.
+  lugar do CDN e as fotos servidas no lugar do Storage: telas fotografadas
+  (inclusive a ficha nova com fotos escolhidas, a ficha so para ver e a
+  ficha em ajuste), nada vazando, toque de 44px no celular.
 
 ## Decisoes registradas
 

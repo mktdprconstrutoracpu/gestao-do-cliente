@@ -62,7 +62,8 @@
   a { color: var(--vermelho); }
   button, input, select, textarea { font: inherit; color: inherit; }
   [hidden] { display: none !important; }
-  .sr { position: absolute; left: -9999px; }
+  /* so para leitor de tela: recortado em vez de jogado para fora da pagina */
+  .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
 
   /* ---- botoes ---- */
   .botao { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--linha); background: var(--cartao); color: var(--texto); font-weight: 600; cursor: pointer; text-decoration: none; transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s; white-space: nowrap; }
@@ -164,6 +165,43 @@
   .alerta--info { border-left-color: var(--azul); }
   .alerta--info b { color: var(--azul); }
 
+  /* linhas clicaveis */
+  tbody tr[data-id] { cursor: pointer; }
+  tbody tr[data-id]:focus-visible { outline: 2px solid var(--vermelho); outline-offset: -2px; }
+
+  /* a ficha da atualizacao: campos a esquerda, linha do tempo a direita */
+  .dlg-ficha { width: min(980px, calc(100vw - 32px)); }
+  .ficha-grade { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 20px; }
+  .ficha-campos { display: grid; gap: 14px; min-width: 0; }
+  .ficha-lado { min-width: 0; background: var(--fundo); border-radius: var(--raio); padding: 14px 16px; display: grid; gap: 10px; align-content: start; max-height: 70vh; overflow-y: auto; }
+  .ficha-lado h3 { font-size: 14px; }
+  .linha { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .linha li { position: relative; padding-left: 18px; font-size: 13px; }
+  .linha li::before { content: ''; position: absolute; left: 0; top: 6px; width: 9px; height: 9px; border-radius: 50%; background: var(--cinza); }
+  .linha li[data-tipo="enviada"]::before, .linha li[data-tipo="reenviada"]::before { background: var(--ambar); }
+  .linha li[data-tipo="aprovada"]::before { background: var(--verde); }
+  .linha li[data-tipo="ajuste"]::before { background: var(--azul); }
+  .linha li[data-tipo="nota"]::before { background: var(--texto); }
+  .linha li small { display: block; color: var(--texto-fraco); font-size: 12px; }
+  .situacao-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 13px; color: var(--texto-fraco); }
+  .observacao { padding: 12px 14px; border-radius: 8px; background: #e3f2fd; border-left: 4px solid var(--azul); font-size: 14px; }
+  .observacao b { color: var(--azul); }
+  .observacao[data-situacao="recusada"] { background: #eceff1; border-left-color: var(--cinza); }
+  .observacao[data-situacao="recusada"] b { color: var(--cinza); }
+  .fotos { display: grid; gap: 8px; }
+  .fotos-cabeca { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px; color: var(--texto-fraco); font-weight: 600; }
+  .fotos-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .fotos-grade:empty { display: none; }
+  .foto { position: relative; margin: 0; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: #e9e9ee; border: 1px solid var(--linha); }
+  .foto a { display: block; height: 100%; }
+  .foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .foto-tirar { position: absolute; top: 4px; right: 4px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: rgba(20, 20, 30, 0.75); color: #fff; font-size: 18px; line-height: 1; cursor: pointer; }
+  .foto-tirar:hover { background: var(--vermelho); }
+  .foto--nova::after { content: 'nova'; position: absolute; left: 6px; bottom: 6px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: var(--verde); color: #fff; }
+  .fotos-vazio { padding: 14px; text-align: center; font-size: 13px; color: var(--texto-fraco); border: 1px dashed var(--linha); border-radius: 8px; }
+  .progresso { font-size: 13px; color: var(--texto-fraco); font-weight: 600; min-height: 1.2em; }
+  .progresso:empty { display: none; }
+
   /* dialogos */
   dialog { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; border: 0; border-radius: 14px; padding: 0; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35); color: var(--texto); }
   dialog::backdrop { background: rgba(20, 20, 30, 0.55); }
@@ -189,6 +227,12 @@
     /* no dedo, todo botao tem 44px, inclusive os pequenos das tabelas */
     .botao--pequeno, .topo-usuario .botao, .papel-sel { min-height: 44px; }
     .papel-sel { padding: 8px; border-radius: 8px; border: 1px solid var(--linha); }
+    /* a ficha vira uma coluna; as fotos, tres por linha; o "tirar foto" cresce para o dedo */
+    .ficha-grade { grid-template-columns: minmax(0, 1fr); }
+    .ficha-lado { max-height: none; }
+    .fotos-grade { grid-template-columns: repeat(3, 1fr); }
+    .foto-tirar { width: 44px; height: 44px; }
+    dialog h2 button { width: 44px; height: 44px; }
   }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
 </style>
@@ -302,34 +346,42 @@
     <section class="painel" id="painelEnviar" data-painel="enviar" hidden>
       <div class="cabeca">
         <div><h1>Enviar atualização</h1><p id="enviarTexto">O que aconteceu na obra, para o cliente ver na Central depois de aprovado.</p></div>
-        <div class="acoes"><button type="button" class="botao botao--cheio" id="novaAtualizacao" disabled title="Entra na próxima etapa">Nova atualização</button></div>
-      </div>
-      <div class="cartao alerta alerta--info" id="enviarAviso">
-        <span><b>Próxima etapa:</b> o formulário de envio, com etapa, percentual, texto e fotos, entra na etapa 3. Por enquanto esta aba mostra as obras em acompanhamento e o seu histórico.</span>
+        <div class="acoes"><button type="button" class="botao botao--cheio" id="novaAtualizacao">Nova atualização</button></div>
       </div>
       <div class="resumo" id="enviarResumo"></div>
       <div class="cartao tabela-caixa">
         <table id="tabelaMinhas">
-          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Data</th><th>Situação</th></tr></thead>
+          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Fotos</th><th>Data</th><th>Situação</th></tr></thead>
           <tbody></tbody>
         </table>
-        <div class="vazio" id="minhasVazio" hidden><b>Nenhuma atualização enviada ainda</b>Quando você enviar, ela aparece aqui com a situação: aguardando aprovação, aprovada, ajuste pedido ou recusada.</div>
+        <div class="vazio" id="minhasVazio" hidden><b>Nenhuma atualização enviada ainda</b><span id="minhasVazioTexto">Toque em "Nova atualização". Ela aparece aqui com a situação: aguardando aprovação, aprovada, ajuste pedido ou recusada.</span></div>
       </div>
     </section>
 
     <!-- Aba 2: Aprovar (Luana, Rodrigo, gestor) -->
     <section class="painel" id="painelAprovar" data-painel="aprovar" hidden>
       <div class="cabeca">
-        <div><h1>Aprovar</h1><p>Tudo o que a obra envia passa por aqui antes de chegar ao cliente. Nada é publicado sem alguém da DPR aprovar.</p></div>
+        <div><h1>Aprovar</h1><p>Tudo o que a obra envia passa por aqui antes de chegar ao cliente. Nada é publicado sem alguém da DPR aprovar. Toque numa linha para abrir.</p></div>
+        <div class="acoes">
+          <div class="campo"><label class="sr" for="filaSituacao">Situação</label>
+            <select id="filaSituacao" class="papel-sel">
+              <option value="aguardando">Aguardando aprovação</option>
+              <option value="ajuste">Com ajuste pedido</option>
+              <option value="aprovada">Aprovadas</option>
+              <option value="recusada">Recusadas</option>
+              <option value="">Todas</option>
+            </select>
+          </div>
+        </div>
       </div>
       <div class="cartao alerta" id="aprovarAvisoEquipe" hidden></div>
       <div class="resumo" id="aprovarResumo"></div>
       <div class="cartao tabela-caixa">
         <table id="tabelaFila">
-          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Enviado por</th><th>Quando</th><th>Situação</th></tr></thead>
+          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Fotos</th><th>Enviado por</th><th>Quando</th><th>Situação</th></tr></thead>
           <tbody></tbody>
         </table>
-        <div class="vazio" id="filaVazio" hidden><b>Nenhuma atualização aguardando</b>Quando alguém da obra enviar, aparece aqui para você aprovar, pedir ajuste ou recusar.</div>
+        <div class="vazio" id="filaVazio" hidden><b id="filaVazioTitulo">Nenhuma atualização aguardando</b><span id="filaVazioTexto">Quando alguém da obra enviar, aparece aqui para você aprovar, pedir ajuste ou recusar.</span></div>
       </div>
     </section>
 
@@ -388,6 +440,46 @@
   </form>
 </dialog>
 
+<!-- a ficha da atualizacao: nova, editar (enquanto aguarda ou em ajuste) ou so ver -->
+<dialog id="dlgAtualizacao" class="dlg-ficha" aria-labelledby="dlgAtualizacaoTitulo">
+  <form id="formAtualizacao" method="dialog" novalidate>
+    <h2><span id="dlgAtualizacaoTitulo">Nova atualização</span><button type="button" data-fechar aria-label="Fechar">&times;</button></h2>
+    <div class="ficha-grade">
+      <div class="ficha-campos">
+        <div class="situacao-linha" id="atuSituacao" hidden></div>
+        <div class="observacao" id="atuObservacao" hidden></div>
+        <div class="campos-2">
+          <div class="campo"><label for="atuEmpreendimento">Empreendimento</label><select id="atuEmpreendimento" required></select></div>
+          <div class="campo"><label for="atuEtapa">Etapa da obra</label><select id="atuEtapa" required></select></div>
+        </div>
+        <div class="campo"><label for="atuTitulo">Título</label><input id="atuTitulo" maxlength="120" required placeholder="Ex.: Paredes da quadra A levantadas" autocomplete="off"></div>
+        <div class="campo"><label for="atuTexto">O que aconteceu</label><textarea id="atuTexto" maxlength="2000" placeholder="Um texto curto, do jeito que o cliente vai ler na Central."></textarea></div>
+        <div class="campos-2">
+          <div class="campo"><label for="atuPercentual">Andamento geral da obra (%)</label><input id="atuPercentual" type="number" inputmode="numeric" min="0" max="100" step="1" placeholder="0 a 100"><span class="dica">Opcional. É o número da barra de andamento na Central.</span></div>
+          <div class="campo"><label for="atuData">Data</label><input id="atuData" type="date" required></div>
+        </div>
+        <div class="fotos">
+          <div class="fotos-cabeca"><span>Fotos <span id="atuFotosConta"></span></span><button type="button" class="botao botao--pequeno" id="atuAddFoto">Adicionar fotos</button></div>
+          <input type="file" id="atuArquivo" accept="image/*" multiple hidden>
+          <div class="fotos-grade" id="atuFotos"></div>
+          <div class="fotos-vazio" id="atuFotosVazio">Nenhuma foto. Da galeria ou da câmera; cada uma é reduzida antes de subir.</div>
+        </div>
+        <p class="progresso" id="atuProgresso" aria-live="polite"></p>
+        <p class="erro" id="atuErro" role="alert"></p>
+        <div class="pe">
+          <button type="button" class="botao botao--leve apagar" id="atuApagar" hidden>Excluir</button>
+          <button type="button" class="botao" data-fechar>Fechar</button>
+          <button type="submit" class="botao botao--cheio" id="atuSalvar">Enviar para aprovação</button>
+        </div>
+      </div>
+      <aside class="ficha-lado" id="atuLado" hidden>
+        <h3>Linha do tempo</h3>
+        <ol class="linha" id="atuLinha"></ol>
+      </aside>
+    </div>
+  </form>
+</dialog>
+
 <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
 
 <script>
@@ -410,7 +502,7 @@
   };
   var PAPEIS = ['gestor', 'aprovador', 'obra'];
 
-  var estado = { sessao: null, perfil: null, perfis: [], empreendimentos: [], etapas: [], atualizacoes: [], rota: '', definirSenha: false, carregou: false };
+  var estado = { sessao: null, perfil: null, perfis: [], empreendimentos: [], etapas: [], atualizacoes: [], fotos: [], rota: '', definirSenha: false, carregou: false, filtroFila: 'aguardando' };
 
   /* ---- aviso no pe da tela ---- */
   var avisoEl = $('aviso'), avisoRelogio = null;
@@ -426,6 +518,8 @@
     if (/duplicate key|unique/i.test(m)) return 'Já existe um empreendimento com esse nome.';
     if (/row-level security|permission denied|violates|Somente|so pode|Nao da para/i.test(m)) return 'Você não tem permissão para fazer isso.';
     if (/foreign key|restrict/i.test(m)) return 'Não dá para excluir: há atualizações ligadas a este empreendimento.';
+    if (/Payload too large|exceeded the maximum allowed size|too large/i.test(m)) return 'A foto é grande demais.';
+    if (/Bucket not found/i.test(m)) return 'O espaço de fotos ainda não foi criado no Supabase (rode o sql/001_obras.sql).';
     if (/Failed to fetch|NetworkError|network/i.test(m)) return 'Sem conexão. Tente de novo.';
     return m;
   }
@@ -608,7 +702,8 @@
     perfis: ['obras_perfis', 'nome', true],
     empreendimentos: ['obras_empreendimentos', 'nome', true],
     etapas: ['obras_etapas', 'ordem', true],
-    atualizacoes: ['obras_atualizacoes', 'criado_em', false]
+    atualizacoes: ['obras_atualizacoes', 'criado_em', false],
+    fotos: ['obras_fotos', 'ordem', true]
   };
   function carregarTudo() {
     var nomes = Object.keys(FONTES);
@@ -630,10 +725,14 @@
   function etapaPorId(id) { return estado.etapas.filter(function (e) { return e.id === id; })[0] || null; }
   function perfilPorId(uid) { return estado.perfis.filter(function (p) { return p.user_id === uid; })[0] || null; }
   function etapasDe(empId) { return estado.etapas.filter(function (e) { return e.empreendimento_id === empId; }); }
+  function atualizacaoPorId(id) { return estado.atualizacoes.filter(function (a) { return a.id === id; })[0] || null; }
+  function fotosDe(id) { return estado.fotos.filter(function (f) { return f.atualizacao_id === id; }); }
   function minhas() { var eu = estado.perfil.user_id; return estado.atualizacoes.filter(function (a) { return a.enviado_por === eu; }); }
   function contar(lista, situacao) { return lista.filter(function (a) { return a.situacao === situacao; }).length; }
+  function dois(n) { return (n < 10 ? '0' : '') + n; }
   /* data so (AAAA-MM-DD) vira DD/MM/AAAA sem passar por fuso horario */
   function dataBr(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; }
+  function hoje() { var d = new Date(); return d.getFullYear() + '-' + dois(d.getMonth() + 1) + '-' + dois(d.getDate()); }
   var dataCurta = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
   function cartaoResumo(n, rotulo, cor) { return '<div class="cartao" data-cor="' + cor + '"><span class="num">' + n + '</span><span class="rot">' + esc(rotulo) + '</span></div>'; }
   function etiqueta(status, mapa) { return '<span class="etiqueta" data-status="' + esc(status) + '">' + esc(mapa[status] || status) + '</span>'; }
@@ -647,11 +746,12 @@
     if (rota === 'equipe') desenharEquipe();
   }
   function linhaAtualizacao(a, comQuem) {
-    var emp = empPorId(a.empreendimento_id), et = etapaPorId(a.etapa_id), quem = perfilPorId(a.enviado_por);
-    return '<tr data-id="' + a.id + '">' +
+    var emp = empPorId(a.empreendimento_id), et = etapaPorId(a.etapa_id), quem = perfilPorId(a.enviado_por), n = fotosDe(a.id).length;
+    return '<tr data-id="' + a.id + '" tabindex="0">' +
       '<td><b>' + esc(emp ? emp.nome : '') + '</b></td>' +
       '<td>' + esc(et ? et.nome : '') + '</td>' +
       '<td>' + esc(a.titulo) + (a.percentual !== null && a.percentual !== undefined ? ' <small style="color: var(--texto-fraco)">' + a.percentual + '%</small>' : '') + '</td>' +
+      '<td class="inteiro">' + (n === 0 ? '<span style="color: var(--texto-fraco)">sem foto</span>' : n === 1 ? '1 foto' : n + ' fotos') + '</td>' +
       (comQuem ? '<td>' + esc(quem ? quem.nome : '') + '</td><td class="inteiro">' + esc(dataCurta.format(new Date(a.criado_em))) + '</td>' : '<td class="inteiro">' + esc(dataBr(a.data_referencia)) + '</td>') +
       '<td>' + etiqueta(a.situacao, NOMES.situacao) + '</td>' +
     '</tr>';
@@ -665,13 +765,25 @@
       cartaoResumo(m.length, m.length === 1 ? 'atualização enviada por você' : 'atualizações enviadas por você', 'azul') +
       cartaoResumo(contar(m, 'aguardando'), 'aguardando aprovação', 'ambar') +
       cartaoResumo(contar(m, 'aprovada'), 'aprovadas', 'verde');
+    // sem obra em acompanhamento nao ha o que enviar
+    $('novaAtualizacao').disabled = ativos.length === 0;
     $('tabelaMinhas').hidden = m.length === 0;
     $('minhasVazio').hidden = m.length > 0;
+    $('minhasVazioTexto').textContent = ativos.length === 0 ? (eGestor() ? 'Cadastre um empreendimento em acompanhamento primeiro, na aba Empreendimentos.' : 'Ainda não há obra em acompanhamento. Peça ao gestor para cadastrar o empreendimento.') : 'Toque em "Nova atualização". Ela aparece aqui com a situação: aguardando aprovação, aprovada, ajuste pedido ou recusada.';
     $('tabelaMinhas').querySelector('tbody').innerHTML = m.map(function (a) { return linhaAtualizacao(a, false); }).join('');
   }
+  var TEXTO_FILA = {
+    aguardando: ['Nenhuma atualização aguardando', 'Quando alguém da obra enviar, aparece aqui para você aprovar, pedir ajuste ou recusar.'],
+    ajuste: ['Nenhuma com ajuste pedido', 'As atualizações devolvidas para a obra corrigir aparecem aqui até serem reenviadas.'],
+    aprovada: ['Nenhuma aprovada ainda', 'O que você aprovar aparece aqui e na Central do Cliente.'],
+    recusada: ['Nenhuma recusada', 'O que for recusado fica aqui, com o motivo, no histórico.'],
+    '': ['Nenhuma atualização', 'Quando a obra enviar, aparece aqui.']
+  };
   function desenharAprovar() {
     var todas = estado.atualizacoes;
-    var fila = todas.filter(function (a) { return a.situacao === 'aguardando'; });
+    var filtro = estado.filtroFila;
+    $('filaSituacao').value = filtro;
+    var fila = todas.filter(function (a) { return !filtro || a.situacao === filtro; });
     $('aprovarResumo').innerHTML =
       cartaoResumo(contar(todas, 'aguardando'), 'aguardando aprovação', 'ambar') +
       cartaoResumo(contar(todas, 'aprovada'), 'aprovadas', 'verde') +
@@ -684,8 +796,226 @@
     if (!aviso.hidden) aviso.innerHTML = '<span><b>' + aguardando + (aguardando === 1 ? ' cadastro aguardando' : ' cadastros aguardando') + '</b> a sua liberação para entrar no painel.</span><a class="botao botao--pequeno" href="#equipe">Ver a equipe</a>';
     $('tabelaFila').hidden = fila.length === 0;
     $('filaVazio').hidden = fila.length > 0;
+    $('filaVazioTitulo').textContent = TEXTO_FILA[filtro][0];
+    $('filaVazioTexto').textContent = TEXTO_FILA[filtro][1];
     $('tabelaFila').querySelector('tbody').innerHTML = fila.map(function (a) { return linhaAtualizacao(a, true); }).join('');
   }
+  $('filaSituacao').addEventListener('change', function () { estado.filtroFila = this.value; desenharAprovar(); });
+  // tocar numa linha (ou Enter) abre a ficha
+  ['tabelaMinhas', 'tabelaFila'].forEach(function (id) {
+    $(id).addEventListener('click', function (ev) { var tr = ev.target.closest('tr[data-id]'); if (tr) abrirAtualizacao(parseInt(tr.getAttribute('data-id'), 10)); });
+    $(id).addEventListener('keydown', function (ev) { var tr = ev.target.closest('tr[data-id]'); if (tr && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); abrirAtualizacao(parseInt(tr.getAttribute('data-id'), 10)); } });
+  });
+
+  /* ---- a ficha da atualizacao: nova, editar (enquanto aguarda ou esta em
+     ajuste) ou so ver. As fotos sobem uma a uma para o Storage, reduzidas no
+     navegador, na pasta do proprio usuario (e o que o banco exige). ---- */
+  var MAX_FOTOS = 10, LADO_MAXIMO = 1600;
+  var fichaAberta = null;        // a atualizacao aberta, ou null quando e nova
+  var fotosNovas = [];           // { arquivo, nome, url } ainda nao enviadas
+  var fotosParaRemover = [];     // ids de obras_fotos marcadas para sair ao salvar
+  function urlDaFoto(caminho) { var r = sb.storage.from('obras').getPublicUrl(caminho); return r && r.data && r.data.publicUrl ? r.data.publicUrl : ''; }
+  function podeEditarAtualizacao(a) { return !a || (a.enviado_por === estado.perfil.user_id && (a.situacao === 'aguardando' || a.situacao === 'ajuste')); }
+  function opcoesEmpreendimentosAtivos(select, valor) {
+    var lista = estado.empreendimentos.filter(function (e) { return e.ativo || e.id === valor; });
+    select.innerHTML = (lista.length ? '' : '<option value="">Nenhuma obra em acompanhamento</option>') + lista.map(function (e) { return '<option value="' + e.id + '">' + esc(e.nome) + '</option>'; }).join('');
+    if (valor) select.value = String(valor);
+  }
+  function opcoesEtapasDe(select, empId, valor) {
+    var lista = etapasDe(empId);
+    select.innerHTML = (lista.length ? '' : '<option value="">Sem etapa cadastrada</option>') + lista.map(function (e) { return '<option value="' + e.id + '">' + esc(e.nome) + ' (' + (NOMES.etapa[e.situacao] || e.situacao).toLowerCase() + ')</option>'; }).join('');
+    if (valor && lista.some(function (e) { return e.id === valor; })) select.value = String(valor);
+    else { var atual = lista.filter(function (e) { return e.situacao === 'em_andamento'; })[0]; if (atual) select.value = String(atual.id); }
+  }
+  function soltarUrls() { fotosNovas.forEach(function (f) { if (f.url && window.URL && URL.revokeObjectURL) { try { URL.revokeObjectURL(f.url); } catch (e) {} } }); }
+  function abrirAtualizacao(id) {
+    var a = id ? atualizacaoPorId(id) : null;
+    if (id && !a) return;
+    soltarUrls();
+    fichaAberta = a; fotosNovas = []; fotosParaRemover = [];
+    var edita = podeEditarAtualizacao(a);
+    var quem = a ? perfilPorId(a.enviado_por) : null, decidiu = a && a.decidido_por ? perfilPorId(a.decidido_por) : null;
+    $('dlgAtualizacaoTitulo').textContent = a ? (edita ? (a.situacao === 'ajuste' ? 'Corrigir e reenviar' : 'Editar atualização') : 'Atualização') : 'Nova atualização';
+    // situacao e observacao do aprovador
+    var sit = $('atuSituacao');
+    sit.hidden = !a;
+    if (a) sit.innerHTML = etiqueta(a.situacao, NOMES.situacao) + '<span>enviada por <b>' + esc(quem ? quem.nome : '') + '</b> em ' + esc(dataCurta.format(new Date(a.criado_em))) + '</span>' + (a.decidido_em ? '<span>' + (a.situacao === 'aprovada' ? 'aprovada' : a.situacao === 'recusada' ? 'recusada' : 'devolvida') + ' por <b>' + esc(decidiu ? decidiu.nome : '') + '</b> em ' + esc(dataCurta.format(new Date(a.decidido_em))) + '</span>' : '');
+    var obs = $('atuObservacao');
+    obs.hidden = !(a && a.observacao_aprovador && (a.situacao === 'ajuste' || a.situacao === 'recusada'));
+    if (!obs.hidden) { obs.setAttribute('data-situacao', a.situacao); obs.innerHTML = '<b>' + (a.situacao === 'ajuste' ? 'O aprovador pediu ajuste:' : 'Motivo da recusa:') + '</b> ' + esc(a.observacao_aprovador); }
+    // campos
+    opcoesEmpreendimentosAtivos($('atuEmpreendimento'), a ? a.empreendimento_id : null);
+    opcoesEtapasDe($('atuEtapa'), parseInt($('atuEmpreendimento').value, 10), a ? a.etapa_id : null);
+    $('atuTitulo').value = a ? a.titulo : '';
+    $('atuTexto').value = a ? (a.texto || '') : '';
+    $('atuPercentual').value = a && a.percentual !== null && a.percentual !== undefined ? a.percentual : '';
+    $('atuData').value = a ? (a.data_referencia || '').slice(0, 10) : hoje();
+    ['atuEmpreendimento', 'atuEtapa', 'atuTitulo', 'atuTexto', 'atuPercentual', 'atuData'].forEach(function (c) { $(c).disabled = !edita; });
+    if (a) $('atuEmpreendimento').disabled = true;   // o banco nao deixa trocar o empreendimento depois
+    $('atuAddFoto').hidden = !edita;
+    $('atuSalvar').hidden = !edita;
+    $('atuSalvar').textContent = !a ? 'Enviar para aprovação' : a.situacao === 'ajuste' ? 'Reenviar para aprovação' : 'Salvar';
+    $('atuApagar').hidden = !(a && ((edita && a.situacao === 'aguardando') || eGestor()));
+    $('atuErro').textContent = ''; $('atuProgresso').textContent = '';
+    desenharFotos();
+    // linha do tempo
+    $('atuLado').hidden = !a;
+    $('atuLinha').innerHTML = '';
+    if (a) carregarLinhaAtualizacao(a.id);
+    abrir($('dlgAtualizacao'));
+    if (edita) $(a ? 'atuTitulo' : 'atuEmpreendimento').focus();
+  }
+  function desenharFotos() {
+    var edita = podeEditarAtualizacao(fichaAberta);
+    var existentes = fichaAberta ? fotosDe(fichaAberta.id).filter(function (f) { return fotosParaRemover.indexOf(f.id) < 0; }) : [];
+    var html = existentes.map(function (f) {
+      var url = urlDaFoto(f.caminho);
+      return '<figure class="foto" data-foto="' + f.id + '"><a href="' + esc(url) + '" target="_blank" rel="noopener"><img src="' + esc(url) + '" alt="' + esc(f.legenda || 'Foto da obra') + '" loading="lazy"></a>' + (edita ? '<button type="button" class="foto-tirar" data-tirar-foto="' + f.id + '" aria-label="Tirar esta foto">&times;</button>' : '') + '</figure>';
+    }).join('') + fotosNovas.map(function (f, k) {
+      return '<figure class="foto foto--nova"><img src="' + esc(f.url) + '" alt="' + esc(f.nome) + '"><button type="button" class="foto-tirar" data-tirar-nova="' + k + '" aria-label="Tirar esta foto">&times;</button></figure>';
+    }).join('');
+    $('atuFotos').innerHTML = html;
+    var total = existentes.length + fotosNovas.length;
+    $('atuFotosVazio').hidden = total > 0;
+    $('atuFotosVazio').textContent = edita ? 'Nenhuma foto. Da galeria ou da câmera; cada uma é reduzida antes de subir.' : 'Esta atualização não tem foto.';
+    $('atuFotosConta').textContent = edita ? '(' + total + ' de ' + MAX_FOTOS + ')' : (total ? '(' + total + ')' : '');
+    $('atuAddFoto').disabled = total >= MAX_FOTOS;
+  }
+  $('atuAddFoto').addEventListener('click', function () { $('atuArquivo').click(); });
+  $('atuArquivo').addEventListener('change', function () {
+    var arquivos = Array.prototype.slice.call(this.files || []);
+    this.value = '';
+    if (!podeEditarAtualizacao(fichaAberta)) return;
+    var existentes = fichaAberta ? fotosDe(fichaAberta.id).filter(function (f) { return fotosParaRemover.indexOf(f.id) < 0; }).length : 0;
+    var espaco = MAX_FOTOS - existentes - fotosNovas.length;
+    if (arquivos.length > espaco) { avisar('No máximo ' + MAX_FOTOS + ' fotos por atualização.', 'erro'); arquivos = arquivos.slice(0, Math.max(0, espaco)); }
+    arquivos.forEach(function (arq) {
+      if (!/^image\//.test(arq.type || '') && !/\.(heic|heif|jpe?g|png|webp)$/i.test(arq.name || '')) { avisar(arq.name + ' não é uma foto.', 'erro'); return; }
+      fotosNovas.push({ arquivo: arq, nome: arq.name || 'foto', url: window.URL && URL.createObjectURL ? URL.createObjectURL(arq) : '' });
+    });
+    desenharFotos();
+  });
+  $('atuFotos').addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-tirar-foto]');
+    if (t) { ev.preventDefault(); fotosParaRemover.push(parseInt(t.getAttribute('data-tirar-foto'), 10)); desenharFotos(); return; }
+    var n = ev.target.closest('[data-tirar-nova]');
+    if (n) { ev.preventDefault(); var k = parseInt(n.getAttribute('data-tirar-nova'), 10); var f = fotosNovas[k]; if (f && f.url && window.URL && URL.revokeObjectURL) { try { URL.revokeObjectURL(f.url); } catch (e) {} } fotosNovas.splice(k, 1); desenharFotos(); }
+  });
+  $('atuEmpreendimento').addEventListener('change', function () { opcoesEtapasDe($('atuEtapa'), parseInt(this.value, 10), null); });
+  function extensaoDe(arq) { var m = /\.([a-z0-9]+)$/i.exec(arq.name || ''); return m ? m[1].toLowerCase() : 'jpg'; }
+  /* reduz a foto no navegador (lado maior em LADO_MAXIMO, JPEG). Se o
+     navegador nao conseguir ler a imagem (um HEIC, por exemplo), sobe o
+     arquivo como veio. */
+  function reduzirFoto(arquivo) {
+    var original = { blob: arquivo, tipo: arquivo.type || 'image/jpeg', ext: extensaoDe(arquivo) };
+    return new Promise(function (resolve) {
+      var canvas = document.createElement('canvas');
+      if (!window.createImageBitmap || !canvas.getContext || !canvas.toBlob) return resolve(original);
+      window.createImageBitmap(arquivo).then(function (bmp) {
+        var escala = Math.min(1, LADO_MAXIMO / Math.max(bmp.width, bmp.height));
+        var w = Math.max(1, Math.round(bmp.width * escala)), h = Math.max(1, Math.round(bmp.height * escala));
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
+        if (bmp.close) bmp.close();
+        canvas.toBlob(function (blob) { resolve(blob ? { blob: blob, tipo: 'image/jpeg', ext: 'jpg' } : original); }, 'image/jpeg', 0.82);
+      }).catch(function () { resolve(original); });
+    });
+  }
+  function subirFotos(atualizacaoId, ordemInicial, aoAvancar) {
+    var uid = estado.perfil.user_id, k = 0, falhas = [];
+    function proxima() {
+      if (k >= fotosNovas.length) return Promise.resolve(falhas);
+      var f = fotosNovas[k];
+      aoAvancar(k + 1, fotosNovas.length);
+      return reduzirFoto(f.arquivo).then(function (r) {
+        var ordem = ordemInicial + k + 1;
+        var caminho = uid + '/' + atualizacaoId + '/' + dois(ordem) + '-' + Date.now() + '.' + r.ext;
+        return sb.storage.from('obras').upload(caminho, r.blob, { contentType: r.tipo, upsert: false }).then(function (up) {
+          if (up.error) { falhas.push(f.nome + ': ' + mensagemDeErro(up.error)); return; }
+          return sb.from('obras_fotos').insert({ atualizacao_id: atualizacaoId, caminho: caminho, ordem: ordem, enviado_por: uid }).then(function (ins) { if (ins.error) falhas.push(f.nome + ': ' + mensagemDeErro(ins.error)); });
+        });
+      }).then(function () { k++; return proxima(); });
+    }
+    return proxima();
+  }
+  function removerFotosMarcadas() {
+    var fotos = fotosParaRemover.map(function (id) { return estado.fotos.filter(function (f) { return f.id === id; })[0]; }).filter(Boolean);
+    if (!fotos.length) return Promise.resolve();
+    return sb.storage.from('obras').remove(fotos.map(function (f) { return f.caminho; })).then(function () {
+      return sb.from('obras_fotos').delete().in('id', fotos.map(function (f) { return f.id; }));
+    });
+  }
+  $('formAtualizacao').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var a = fichaAberta;
+    if (!podeEditarAtualizacao(a)) return;
+    var erro = $('atuErro'); erro.textContent = '';
+    var empId = parseInt($('atuEmpreendimento').value, 10);
+    var etapaId = $('atuEtapa').value ? parseInt($('atuEtapa').value, 10) : null;
+    var dados = {
+      empreendimento_id: empId,
+      etapa_id: etapaId,
+      titulo: $('atuTitulo').value.trim().replace(/\s+/g, ' '),
+      texto: $('atuTexto').value.trim() || null,
+      percentual: $('atuPercentual').value === '' ? null : parseInt($('atuPercentual').value, 10),
+      data_referencia: $('atuData').value || hoje()
+    };
+    if (!empId) { erro.textContent = 'Escolha o empreendimento.'; return; }
+    if (etapasDe(empId).length && !etapaId) { erro.textContent = 'Escolha a etapa da obra.'; return; }
+    if (dados.titulo.length < 3) { erro.textContent = 'Dê um título curto à atualização.'; $('atuTitulo').focus(); return; }
+    if (dados.percentual !== null && !(dados.percentual >= 0 && dados.percentual <= 100)) { erro.textContent = 'O andamento é um número de 0 a 100.'; $('atuPercentual').focus(); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dados.data_referencia)) { erro.textContent = 'Informe a data.'; return; }
+    var totalFotos = (a ? fotosDe(a.id).filter(function (f) { return fotosParaRemover.indexOf(f.id) < 0; }).length : 0) + fotosNovas.length;
+    if (totalFotos === 0 && !window.confirm('Enviar sem foto? O cliente vê melhor a obra com foto, e o aprovador pode pedir ajuste.')) return;
+    var botao = $('atuSalvar'); botao.disabled = true; $('atuAddFoto').disabled = true;
+    $('atuProgresso').textContent = a ? 'Salvando...' : 'Enviando...';
+    var q = a ? sb.from('obras_atualizacoes').update(dados).eq('id', a.id).select().single()
+              : sb.from('obras_atualizacoes').insert(Object.assign({ enviado_por: estado.perfil.user_id }, dados)).select().single();
+    q.then(function (r) {
+      if (r.error) { botao.disabled = false; $('atuAddFoto').disabled = false; $('atuProgresso').textContent = ''; erro.textContent = mensagemDeErro(r.error); return; }
+      var salva = r.data;
+      var ordemInicial = a ? fotosDe(a.id).reduce(function (m, f) { return Math.max(m, f.ordem || 0); }, 0) : 0;
+      return removerFotosMarcadas().then(function () {
+        return subirFotos(salva.id, ordemInicial, function (n, total) { $('atuProgresso').textContent = 'Enviando foto ' + n + ' de ' + total + '...'; });
+      }).then(function (falhas) {
+        botao.disabled = false; $('atuAddFoto').disabled = false; $('atuProgresso').textContent = '';
+        soltarUrls(); fotosNovas = []; fotosParaRemover = [];
+        $('dlgAtualizacao').close();
+        if (falhas.length) avisar((falhas.length === 1 ? '1 foto não subiu' : falhas.length + ' fotos não subiram') + ' (' + falhas[0] + '). Abra a atualização e tente de novo.', 'erro');
+        else avisar(!a ? 'Atualização enviada para aprovação.' : a.situacao === 'ajuste' ? 'Atualização reenviada para aprovação.' : 'Atualização salva.', 'ok');
+        return Promise.all([recarregar('atualizacoes'), recarregar('fotos')]);
+      });
+    });
+  });
+  $('atuApagar').addEventListener('click', function () {
+    var a = fichaAberta;
+    if (!a || !window.confirm('Excluir a atualização "' + a.titulo + '"? As fotos vão junto.')) return;
+    var fotos = fotosDe(a.id);
+    var botao = $('atuApagar'); botao.disabled = true;
+    (fotos.length ? sb.storage.from('obras').remove(fotos.map(function (f) { return f.caminho; })) : Promise.resolve()).then(function () {
+      return sb.from('obras_atualizacoes').delete().eq('id', a.id);
+    }).then(function (r) {
+      botao.disabled = false;
+      if (r && r.error) { $('atuErro').textContent = mensagemDeErro(r.error); return; }
+      $('dlgAtualizacao').close();
+      avisar('Atualização excluída.', 'ok');
+      return Promise.all([recarregar('atualizacoes'), recarregar('fotos')]);
+    });
+  });
+  var NOMES_EVENTO = { enviada: 'Enviada para aprovação', reenviada: 'Corrigida e reenviada', aprovada: 'Aprovada', ajuste: 'Ajuste pedido', recusada: 'Recusada', nota: 'Anotação' };
+  function carregarLinhaAtualizacao(id) {
+    return sb.from('obras_eventos').select('*').eq('atualizacao_id', id).order('criado_em', { ascending: false }).then(function (r) {
+      if (r.error) { $('atuLinha').innerHTML = '<li>' + esc(mensagemDeErro(r.error)) + '</li>'; return; }
+      var evs = r.data || [];
+      $('atuLinha').innerHTML = evs.length ? evs.map(function (ev) {
+        var autor = perfilPorId(ev.autor);
+        var texto = (NOMES_EVENTO[ev.tipo] || ev.tipo) + (ev.texto && ev.tipo !== 'enviada' ? ': ' + ev.texto : '');
+        return '<li data-tipo="' + esc(ev.tipo) + '">' + esc(texto) + '<small>' + esc(dataCurta.format(new Date(ev.criado_em))) + (autor ? ' · ' + autor.nome.split(' ')[0] : '') + '</small></li>';
+      }).join('') : '<li data-tipo="nota">Nada registrado ainda.</li>';
+    });
+  }
+  $('novaAtualizacao').addEventListener('click', function () { abrirAtualizacao(null); });
+  $('dlgAtualizacao').addEventListener('close', function () { soltarUrls(); fotosNovas = []; fotosParaRemover = []; fichaAberta = null; });
 
   /* ---- empreendimentos (gestor) ---- */
   function desenharEmpreendimentos() {
@@ -864,7 +1194,7 @@
   });
 
   /* para os testes */
-  window.OBRAS = { estado: estado, ir: ir, eGestor: eGestor, podeAprovar: podeAprovar, dataBr: dataBr };
+  window.OBRAS = { estado: estado, ir: ir, eGestor: eGestor, podeAprovar: podeAprovar, dataBr: dataBr, abrirAtualizacao: abrirAtualizacao, reduzirFoto: reduzirFoto };
 })();
 </script>
 </body>
