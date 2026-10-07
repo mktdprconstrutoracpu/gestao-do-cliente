@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestão do Cliente DPR</title>
+<meta name="description" content="Painel de obras da DPR Construtora: a obra envia a atualização, o aprovador libera, o cliente vê na Central.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2d2d2d">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23d32f2f'/%3E%3Ctext x='16' y='21' font-family='Arial' font-weight='700' font-size='13' text-anchor='middle' fill='%23fff'%3EDPR%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ===========================================================================
+     Gestao do Cliente DPR -- etapa 1: a base do painel de obras.
+     Um arquivo so, como o Central DPR e o CRM: HTML, CSS e script aqui dentro,
+     banco e login no Supabase (o mesmo projeto, com as tabelas obras_*). Sem
+     build; a Vercel serve direto.
+
+     AS DUAS ABAS pedidas por ela (07/10/2026):
+       - Enviar atualizacao: quem esta na obra entra com o seu login e envia o
+         que aconteceu (etapa, percentual, fotos, texto). Nesta etapa a aba tem
+         a estrutura e o historico; o formulario completo entra na etapa 3.
+       - Aprovar: quem aprova (Luana ou Rodrigo, papel "aprovador", ou o
+         gestor) ve a fila do que a obra enviou e decide. A decisao entra na
+         etapa 4. So o aprovado chega ao cliente, na Central.
+     Mais duas abas so do gestor: Empreendimentos (as obras acompanhadas, com o
+     mesmo nome que a Central usa) e Equipe (quem entra e com que papel).
+
+     QUEM VE O QUE e decidido no banco (RLS, ver sql/001_obras.sql). A tela so
+     esconde o que a pessoa nao pode fazer. Papeis: gestor (tudo), aprovador
+     (ve tudo e decide), obra (envia e ve so o que enviou).
+     =========================================================================== -->
+<style>
+  :root {
+    --primario: #2d2d2d;
+    --secundario: #3a3a3a;
+    --vermelho: #d32f2f;
+    --vermelho-escuro: #b71c1c;
+    --fundo: #f4f4f6;
+    --cartao: #ffffff;
+    --texto: #2b2b2e;
+    --texto-fraco: #6f6f78;
+    --linha: #e3e3e8;
+    --verde: #2e7d32;
+    --ambar: #ef6c00;
+    --azul: #1565c0;
+    --cinza: #8a8a94;
+    --titulo: 'Montserrat', 'Segoe UI', sans-serif;
+    --texto-fonte: 'Inter', 'Segoe UI', sans-serif;
+    --raio: 10px;
+    --sombra: 0 1px 2px rgba(20, 20, 30, 0.06), 0 6px 20px rgba(20, 20, 30, 0.06);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--fundo); color: var(--texto); font-family: var(--texto-fonte); font-size: 15px; line-height: 1.5; min-height: 100vh; }
+  h1, h2, h3 { margin: 0; font-family: var(--titulo); font-weight: 700; letter-spacing: -0.01em; }
+  h1 { font-size: 22px; }
+  h2 { font-size: 18px; }
+  p { margin: 0; }
+  a { color: var(--vermelho); }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; left: -9999px; }
+
+  /* ---- botoes ---- */
+  .botao { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--linha); background: var(--cartao); color: var(--texto); font-weight: 600; cursor: pointer; text-decoration: none; transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s; white-space: nowrap; }
+  .botao:hover { border-color: #c9c9d1; background: #fafafb; }
+  .botao:focus-visible { outline: 2px solid var(--vermelho); outline-offset: 2px; }
+  .botao--cheio { background: var(--vermelho); border-color: var(--vermelho); color: #fff; }
+  .botao--cheio:hover { background: var(--vermelho-escuro); border-color: var(--vermelho-escuro); }
+  .botao--leve { border-color: transparent; background: transparent; color: var(--texto-fraco); }
+  .botao--leve:hover { background: rgba(0, 0, 0, 0.05); color: var(--texto); }
+  .botao[disabled] { opacity: 0.55; cursor: default; pointer-events: none; }
+  .botao--pequeno { min-height: 34px; padding: 5px 10px; font-size: 13px; }
+
+  /* ---- campos ---- */
+  .campo { display: grid; gap: 6px; min-width: 0; }
+  .campo label { font-size: 13px; font-weight: 600; color: var(--texto-fraco); }
+  .campo input, .campo select, .campo textarea { width: 100%; min-width: 0; min-height: 44px; padding: 9px 12px; border: 1px solid var(--linha); border-radius: 8px; background: #fff; font-size: 16px; }
+  .campo textarea { min-height: 84px; resize: vertical; }
+  .campo input:focus, .campo select:focus, .campo textarea:focus { outline: none; border-color: var(--vermelho); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12); }
+  .campo input[disabled], .campo select[disabled], .campo textarea[disabled] { background: #f4f4f6; color: var(--texto-fraco); }
+  .campo .dica { font-size: 12px; color: var(--texto-fraco); }
+  .campos-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .erro { color: var(--vermelho); font-size: 13px; font-weight: 600; min-height: 1.2em; }
+  .erro:empty { display: none; }
+
+  /* ---- telas de entrada ---- */
+  .entrada { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: linear-gradient(160deg, #1f1f22 0%, #2d2d2d 55%, #3a3a3a 100%); }
+  .entrada-caixa { width: min(440px, 100%); background: var(--cartao); border-radius: 14px; padding: 32px 28px 28px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35); display: grid; gap: 18px; }
+  .marca { display: inline-flex; align-items: center; gap: 10px; font-family: var(--titulo); font-weight: 800; font-size: 18px; color: var(--primario); text-decoration: none; white-space: nowrap; }
+  .marca i { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 8px; background: var(--vermelho); color: #fff; font-style: normal; font-size: 11px; letter-spacing: 0.04em; flex: 0 0 auto; }
+  .entrada-caixa h1 { font-size: 20px; }
+  .entrada-caixa p { color: var(--texto-fraco); font-size: 14px; }
+  .entrada-caixa form { display: grid; gap: 14px; }
+  .entrada-caixa .botao { min-height: 46px; }
+  .entrada-caixa .pe { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+  .entrada-caixa .pe button { background: none; border: 0; min-height: 44px; padding: 10px 0; color: var(--vermelho); font-weight: 600; cursor: pointer; }
+  .carregando { min-height: 100vh; display: grid; place-items: center; color: var(--texto-fraco); font-weight: 600; }
+
+  /* ---- o painel ---- */
+  .topo { position: sticky; top: 0; z-index: 50; background: var(--primario); color: #fff; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); }
+  .topo-dentro { display: flex; align-items: center; gap: 18px; padding: 0 clamp(14px, 3vw, 32px); min-height: 60px; }
+  .topo .marca { color: #fff; font-size: 16px; }
+  /* as abas: as duas principais (Enviar, Aprovar) e as duas do gestor */
+  .topo nav { display: flex; gap: 4px; margin-left: 8px; overflow-x: auto; scrollbar-width: none; }
+  .topo nav::-webkit-scrollbar { display: none; }
+  .topo nav a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; color: rgba(255, 255, 255, 0.78); text-decoration: none; font-weight: 600; font-size: 14px; white-space: nowrap; }
+  .topo nav a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+  .topo nav a.ativo { background: var(--vermelho); color: #fff; }
+  .topo-usuario { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .topo-usuario .quem { text-align: right; line-height: 1.2; }
+  .topo-usuario .quem b { display: block; font-size: 14px; }
+  .topo-usuario .quem span { font-size: 12px; color: rgba(255, 255, 255, 0.65); }
+  .topo-usuario .botao { min-height: 36px; padding: 5px 12px; font-size: 13px; background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.25); }
+  .topo-usuario .botao:hover { background: rgba(255, 255, 255, 0.1); }
+  main { padding: clamp(18px, 3vw, 32px); max-width: 1320px; margin: 0 auto; }
+  .painel { display: grid; gap: 18px; }
+  .cabeca { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+  .cabeca p { color: var(--texto-fraco); font-size: 14px; }
+  .acoes { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: var(--raio); box-shadow: var(--sombra); }
+
+  /* os numeros no alto de cada aba */
+  .resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+  .resumo .cartao { padding: 16px 18px; display: grid; gap: 4px; }
+  .resumo .num { font-family: var(--titulo); font-weight: 800; font-size: 30px; line-height: 1; }
+  .resumo .rot { font-size: 13px; color: var(--texto-fraco); font-weight: 600; }
+  .resumo .cartao[data-cor="verde"] .num { color: var(--verde); }
+  .resumo .cartao[data-cor="ambar"] .num { color: var(--ambar); }
+  .resumo .cartao[data-cor="vermelho"] .num { color: var(--vermelho); }
+  .resumo .cartao[data-cor="azul"] .num { color: var(--azul); }
+  .resumo .cartao[data-cor="cinza"] .num { color: var(--cinza); }
+
+  /* tabelas */
+  .tabela-caixa { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--linha); vertical-align: middle; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-fraco); font-weight: 700; background: #fafafb; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #fcfcfd; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.inteiro { white-space: nowrap; }
+  td .acoes { gap: 6px; }
+  .papel-sel { min-height: 36px; padding: 6px 10px; border: 1px solid var(--linha); border-radius: 8px; background: #fff; font-size: 14px; }
+  .papel-sel:focus { outline: none; border-color: var(--vermelho); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12); }
+  .vazio { padding: 40px 20px; text-align: center; color: var(--texto-fraco); }
+  .vazio b { display: block; color: var(--texto); margin-bottom: 4px; }
+
+  /* etiquetas de situacao */
+  .etiqueta { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; background: #eee; color: var(--texto); }
+  .etiqueta::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .etiqueta[data-status="aprovada"], .etiqueta[data-status="ativo"], .etiqueta[data-status="concluida"] { background: #e8f5e9; color: var(--verde); }
+  .etiqueta[data-status="aguardando"], .etiqueta[data-status="em_andamento"] { background: #fff3e0; color: var(--ambar); }
+  .etiqueta[data-status="ajuste"] { background: #e3f2fd; color: var(--azul); }
+  .etiqueta[data-status="recusada"], .etiqueta[data-status="inativo"], .etiqueta[data-status="a_fazer"] { background: #eceff1; color: var(--cinza); }
+  .etiqueta[data-status="gestor"] { background: #fdecea; color: var(--vermelho); }
+  .etiqueta[data-status="aprovador"] { background: #e3f2fd; color: var(--azul); }
+  .etiqueta[data-status="obra"] { background: #f1f1f4; color: var(--texto); }
+  .alerta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 14px 18px; border-left: 5px solid var(--ambar); font-size: 14px; }
+  .alerta b { color: var(--ambar); }
+  .alerta--info { border-left-color: var(--azul); }
+  .alerta--info b { color: var(--azul); }
+
+  /* dialogos */
+  dialog { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; border: 0; border-radius: 14px; padding: 0; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35); color: var(--texto); }
+  dialog::backdrop { background: rgba(20, 20, 30, 0.55); }
+  dialog form { display: grid; gap: 14px; padding: 24px; }
+  dialog h2 { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  dialog h2 button { width: 36px; height: 36px; border: 0; border-radius: 50%; background: transparent; cursor: pointer; font-size: 20px; line-height: 1; color: var(--texto-fraco); }
+  dialog h2 button:hover { background: rgba(0, 0, 0, 0.06); color: var(--texto); }
+  dialog .pe { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+  dialog .pe .apagar { margin-right: auto; color: var(--vermelho); }
+
+  /* aviso (toast) */
+  .aviso { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); z-index: 100; max-width: min(520px, calc(100vw - 32px)); padding: 12px 18px; border-radius: 10px; background: var(--primario); color: #fff; font-weight: 600; font-size: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; }
+  .aviso.visivel { opacity: 1; transform: translate(-50%, 0); }
+  .aviso[data-tipo="erro"] { background: var(--vermelho); }
+  .aviso[data-tipo="ok"] { background: var(--verde); }
+
+  @media (max-width: 760px) {
+    .campos-2 { grid-template-columns: 1fr; }
+    .topo-dentro { flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; gap: 8px 14px; }
+    .topo nav { order: 3; width: 100%; margin-left: 0; }
+    .topo-usuario .quem span { display: none; }
+    th, td { padding: 10px 10px; }
+    /* no dedo, todo botao tem 44px, inclusive os pequenos das tabelas */
+    .botao--pequeno, .topo-usuario .botao, .papel-sel { min-height: 44px; }
+    .papel-sel { padding: 8px; border-radius: 8px; border: 1px solid var(--linha); }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
+</style>
+</head>
+<body>
+
+<div class="carregando" id="telaCarregando">Abrindo o painel...</div>
+
+<!-- ======================================================= entrar ======= -->
+<section class="entrada" id="telaEntrar" hidden>
+  <div class="entrada-caixa">
+    <span class="marca"><i>DPR</i>Gestão do Cliente</span>
+    <div>
+      <h1 id="entrarTitulo">Entrar</h1>
+      <p id="entrarTexto">Painel de obras da DPR: quem está na obra envia a atualização, quem aprova libera, e o cliente vê na Central.</p>
+    </div>
+    <form id="formEntrar" novalidate>
+      <div class="campo"><label for="entrarEmail">E-mail</label><input id="entrarEmail" type="email" autocomplete="username" required></div>
+      <div class="campo" id="campoSenha"><label for="entrarSenha">Senha</label><input id="entrarSenha" type="password" autocomplete="current-password" required></div>
+      <p class="erro" id="entrarErro" role="alert"></p>
+      <button type="submit" class="botao botao--cheio" id="entrarBotao">Entrar</button>
+      <div class="pe">
+        <button type="button" id="entrarEsqueci">Esqueci a senha</button>
+        <button type="button" id="entrarRegistrar">Criar conta</button>
+        <button type="button" id="entrarVoltar" hidden>Voltar para entrar</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ===================================================== criar conta ======= -->
+<!-- O primeiro cadastro vira gestor na hora; os seguintes ficam aguardando um
+     gestor aprovar na aba Equipe (ver sql/001_obras.sql, obras_registrar). -->
+<section class="entrada" id="telaRegistrar" hidden>
+  <div class="entrada-caixa">
+    <span class="marca"><i>DPR</i>Gestão do Cliente</span>
+    <div>
+      <h1>Criar conta</h1>
+      <p>Para a equipe da DPR e das obras. O primeiro cadastro vira gestor; os seguintes entram depois que um gestor liberar o acesso.</p>
+    </div>
+    <form id="formRegistrar" novalidate>
+      <div class="campo"><label for="regNome">Nome</label><input id="regNome" autocomplete="name" maxlength="120" required></div>
+      <div class="campo"><label for="regEmail">E-mail</label><input id="regEmail" type="email" autocomplete="email" required></div>
+      <div class="campo"><label for="regSenha">Senha</label><input id="regSenha" type="password" autocomplete="new-password" minlength="8" required><span class="dica">Pelo menos 8 caracteres.</span></div>
+      <div class="campo"><label for="regPapel">Papel</label>
+        <select id="regPapel">
+          <option value="obra">Obra: envia as atualizações do andamento</option>
+          <option value="aprovador">Aprovador: aprova ou pede ajuste antes de ir para o cliente</option>
+          <option value="gestor">Gestor: tudo, inclusive pessoas e empreendimentos</option>
+        </select>
+      </div>
+      <p class="erro" id="regErro" role="alert"></p>
+      <button type="submit" class="botao botao--cheio" id="regBotao">Criar conta</button>
+      <div class="pe">
+        <span></span>
+        <button type="button" id="regVoltar">Já tenho conta</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ================================================== criar a senha ======= -->
+<section class="entrada" id="telaSenha" hidden>
+  <div class="entrada-caixa">
+    <span class="marca"><i>DPR</i>Gestão do Cliente</span>
+    <div>
+      <h1>Crie a sua senha</h1>
+      <p>Você entrou pelo link do e-mail. Escolha uma senha para os próximos acessos: pelo menos 8 caracteres.</p>
+    </div>
+    <form id="formSenha" novalidate>
+      <div class="campo"><label for="senhaNova">Nova senha</label><input id="senhaNova" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div class="campo"><label for="senhaRepete">Repita a senha</label><input id="senhaRepete" type="password" autocomplete="new-password" minlength="8" required></div>
+      <p class="erro" id="senhaErro" role="alert"></p>
+      <button type="submit" class="botao botao--cheio" id="senhaBotao">Salvar e entrar</button>
+    </form>
+  </div>
+</section>
+
+<!-- ===================================================== sem acesso ======= -->
+<section class="entrada" id="telaSemAcesso" hidden>
+  <div class="entrada-caixa">
+    <span class="marca"><i>DPR</i>Gestão do Cliente</span>
+    <div>
+      <h1 id="semAcessoTitulo">Sua conta não tem acesso ao painel</h1>
+      <p id="semAcessoTexto">Este login existe, mas não está na equipe do painel de obras.</p>
+    </div>
+    <button type="button" class="botao" id="semAcessoSair">Sair</button>
+  </div>
+</section>
+
+<!-- ====================================================== o painel ======= -->
+<div id="app" hidden>
+  <header class="topo">
+    <div class="topo-dentro">
+      <a class="marca" href="#"><i>DPR</i>Gestão do Cliente</a>
+      <nav aria-label="Abas do painel" id="menu">
+        <a href="#enviar" data-rota="enviar">Enviar atualização</a>
+        <a href="#aprovar" data-rota="aprovar" data-so="aprova">Aprovar</a>
+        <a href="#empreendimentos" data-rota="empreendimentos" data-so="gestor">Empreendimentos</a>
+        <a href="#equipe" data-rota="equipe" data-so="gestor">Equipe</a>
+      </nav>
+      <div class="topo-usuario">
+        <div class="quem"><b id="usuarioNome"></b><span id="usuarioPapel"></span></div>
+        <button type="button" class="botao" id="sair">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Aba 1: Enviar atualizacao (quem esta na obra) -->
+    <section class="painel" id="painelEnviar" data-painel="enviar" hidden>
+      <div class="cabeca">
+        <div><h1>Enviar atualização</h1><p id="enviarTexto">O que aconteceu na obra, para o cliente ver na Central depois de aprovado.</p></div>
+        <div class="acoes"><button type="button" class="botao botao--cheio" id="novaAtualizacao" disabled title="Entra na próxima etapa">Nova atualização</button></div>
+      </div>
+      <div class="cartao alerta alerta--info" id="enviarAviso">
+        <span><b>Próxima etapa:</b> o formulário de envio, com etapa, percentual, texto e fotos, entra na etapa 3. Por enquanto esta aba mostra as obras em acompanhamento e o seu histórico.</span>
+      </div>
+      <div class="resumo" id="enviarResumo"></div>
+      <div class="cartao tabela-caixa">
+        <table id="tabelaMinhas">
+          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Data</th><th>Situação</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="vazio" id="minhasVazio" hidden><b>Nenhuma atualização enviada ainda</b>Quando você enviar, ela aparece aqui com a situação: aguardando aprovação, aprovada, ajuste pedido ou recusada.</div>
+      </div>
+    </section>
+
+    <!-- Aba 2: Aprovar (Luana, Rodrigo, gestor) -->
+    <section class="painel" id="painelAprovar" data-painel="aprovar" hidden>
+      <div class="cabeca">
+        <div><h1>Aprovar</h1><p>Tudo o que a obra envia passa por aqui antes de chegar ao cliente. Nada é publicado sem alguém da DPR aprovar.</p></div>
+      </div>
+      <div class="cartao alerta" id="aprovarAvisoEquipe" hidden></div>
+      <div class="resumo" id="aprovarResumo"></div>
+      <div class="cartao tabela-caixa">
+        <table id="tabelaFila">
+          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Enviado por</th><th>Quando</th><th>Situação</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="vazio" id="filaVazio" hidden><b>Nenhuma atualização aguardando</b>Quando alguém da obra enviar, aparece aqui para você aprovar, pedir ajuste ou recusar.</div>
+      </div>
+    </section>
+
+    <!-- Gestor: Empreendimentos -->
+    <section class="painel" id="painelEmpreendimentos" data-painel="empreendimentos" hidden>
+      <div class="cabeca">
+        <div><h1>Empreendimentos</h1><p>As obras acompanhadas. Use o mesmo nome que está na Central do Cliente: é por ele que o cliente vê a obra da casa dele.</p></div>
+        <div class="acoes"><button type="button" class="botao botao--cheio" id="novoEmpreendimento">Novo empreendimento</button></div>
+      </div>
+      <div class="cartao tabela-caixa">
+        <table id="tabelaEmpreendimentos">
+          <thead><tr><th>Nome</th><th>Cidade</th><th>Início da obra</th><th>Previsão de entrega</th><th>Etapas</th><th>Situação</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="vazio" id="empreendimentosVazio" hidden><b>Nenhum empreendimento ainda</b>Cadastre o primeiro em "Novo empreendimento". Ele já nasce com as quatro etapas padrão.</div>
+      </div>
+    </section>
+
+    <!-- Gestor: Equipe -->
+    <section class="painel" id="painelEquipe" data-painel="equipe" hidden>
+      <div class="cabeca">
+        <div><h1>Equipe</h1><p>Quem entra no painel e com que papel. Quem sai fica inativo, nunca é apagado.</p></div>
+      </div>
+      <div class="cartao alerta" id="equipeAviso" hidden></div>
+      <div class="cartao tabela-caixa">
+        <table id="tabelaEquipe">
+          <thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th><th>Situação</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ===================================================== dialogos ======= -->
+<dialog id="dlgEmpreendimento" aria-labelledby="dlgEmpreendimentoTitulo">
+  <form id="formEmpreendimento" method="dialog" novalidate>
+    <h2><span id="dlgEmpreendimentoTitulo">Novo empreendimento</span><button type="button" data-fechar aria-label="Fechar">&times;</button></h2>
+    <input type="hidden" id="empId">
+    <div class="campo"><label for="empNome">Nome</label><input id="empNome" required maxlength="120" placeholder="VILLAGIO CAUCAIA II"><span class="dica">Igual ao nome que aparece na Central do Cliente, para o cliente ver a obra da casa dele.</span></div>
+    <div class="campo"><label for="empCidade">Cidade</label><input id="empCidade" maxlength="80" placeholder="Cotia"></div>
+    <div class="campos-2">
+      <div class="campo"><label for="empInicio">Início da obra</label><input id="empInicio" type="date"></div>
+      <div class="campo"><label for="empPrevisao">Previsão de entrega</label><input id="empPrevisao" type="date"></div>
+    </div>
+    <div class="campo"><label for="empAtivo">Situação</label>
+      <select id="empAtivo"><option value="sim">Em acompanhamento</option><option value="nao">Encerrado</option></select>
+    </div>
+    <div class="campo"><label for="empObs">Observações</label><textarea id="empObs" maxlength="2000"></textarea></div>
+    <p class="erro" id="empErro" role="alert"></p>
+    <div class="pe">
+      <button type="button" class="botao botao--leve apagar" id="empApagar" hidden>Excluir</button>
+      <button type="button" class="botao" data-fechar>Cancelar</button>
+      <button type="submit" class="botao botao--cheio" id="empSalvar">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="aviso" id="aviso" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---- Supabase: o mesmo projeto do Central DPR e do CRM. A chave abaixo e
+     a PUBLICAVEL: feita para ficar no navegador; sem login ela nao abre nada,
+     e com login so abre o que as travas do banco deixam. ---- */
+  var SUPABASE_URL = 'https://roashkfdjgsweuftqhyx.supabase.co';
+  var SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_T4u8FTh9_VvBtW7Ycxw4FQ_dHu0n5tT';
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var NOMES = {
+    papel: { gestor: 'Gestor', aprovador: 'Aprovador', obra: 'Obra' },
+    situacao: { aguardando: 'Aguardando aprovação', aprovada: 'Aprovada', ajuste: 'Ajuste pedido', recusada: 'Recusada' },
+    etapa: { a_fazer: 'A fazer', em_andamento: 'Em andamento', concluida: 'Concluída' }
+  };
+  var PAPEIS = ['gestor', 'aprovador', 'obra'];
+
+  var estado = { sessao: null, perfil: null, perfis: [], empreendimentos: [], etapas: [], atualizacoes: [], rota: '', definirSenha: false, carregou: false };
+
+  /* ---- aviso no pe da tela ---- */
+  var avisoEl = $('aviso'), avisoRelogio = null;
+  function avisar(texto, tipo) {
+    avisoEl.textContent = texto;
+    avisoEl.setAttribute('data-tipo', tipo || 'info');
+    avisoEl.classList.add('visivel');
+    window.clearTimeout(avisoRelogio);
+    avisoRelogio = window.setTimeout(function () { avisoEl.classList.remove('visivel'); }, 4200);
+  }
+  function mensagemDeErro(erro) {
+    var m = (erro && (erro.message || erro.motivo)) || String(erro || 'erro');
+    if (/duplicate key|unique/i.test(m)) return 'Já existe um empreendimento com esse nome.';
+    if (/row-level security|permission denied|violates|Somente|so pode|Nao da para/i.test(m)) return 'Você não tem permissão para fazer isso.';
+    if (/foreign key|restrict/i.test(m)) return 'Não dá para excluir: há atualizações ligadas a este empreendimento.';
+    if (/Failed to fetch|NetworkError|network/i.test(m)) return 'Sem conexão. Tente de novo.';
+    return m;
+  }
+
+  /* ---- telas ---- */
+  var TELAS = ['telaCarregando', 'telaEntrar', 'telaRegistrar', 'telaSenha', 'telaSemAcesso', 'app'];
+  function mostrarTela(id) { TELAS.forEach(function (t) { $(t).hidden = t !== id; }); }
+
+  /* ---- a sessao ---- */
+  function aoMudarSessao(sessao) {
+    estado.sessao = sessao;
+    if (!sessao) { estado.perfil = null; estado.carregou = false; mostrarTela('telaEntrar'); return; }
+    if (estado.definirSenha) { mostrarTela('telaSenha'); return; }
+    carregarPerfil();
+  }
+  function semAcesso(titulo, texto) {
+    $('semAcessoTitulo').textContent = titulo;
+    $('semAcessoTexto').textContent = texto;
+    mostrarTela('telaSemAcesso');
+  }
+  /* Quem acabou de se cadastrar pela tela "Criar conta" ainda nao tem perfil:
+     o signUp guardou nome e papel nos dados do login (origem: obras), e a
+     funcao obras_registrar cria o perfil (o primeiro vira gestor; os outros
+     ficam aguardando). Um cliente do portal, sem essa marca, nao ganha perfil. */
+  function carregarPerfil(jaRegistrou) {
+    return sb.from('obras_perfis').select('*').eq('user_id', estado.sessao.user.id).maybeSingle().then(function (r) {
+      if (r.error) { avisar(mensagemDeErro(r.error), 'erro'); semAcesso('Não consegui ler o seu acesso', 'Tente de novo em instantes. Se continuar, fale com um gestor da DPR.'); return; }
+      var p = r.data;
+      var meta = (estado.sessao.user && estado.sessao.user.user_metadata) || {};
+      if (!p && meta.origem === 'obras' && !jaRegistrou) {
+        return sb.rpc('obras_registrar', { p_nome: meta.nome || '', p_papel: meta.papel_solicitado || 'obra' }).then(function (rr) {
+          if (rr.error) { avisar(mensagemDeErro(rr.error), 'erro'); }
+          return carregarPerfil(true);
+        });
+      }
+      if (!p) { semAcesso('Sua conta não tem acesso ao painel', 'Este login existe, mas não está na equipe do painel de obras. Crie uma conta do painel, ou peça a um gestor da DPR.'); return; }
+      if (!p.ativo && !p.aprovado_em) { semAcesso('Cadastro recebido', 'Seu cadastro como ' + (NOMES.papel[p.papel] || p.papel).toLowerCase() + ' está aguardando a liberação de um gestor da DPR. Quando liberar, é só entrar de novo.'); return; }
+      if (!p.ativo) { semAcesso('Sua conta foi desativada', 'Esta conta foi desativada no painel. Fale com um gestor da DPR.'); return; }
+      estado.perfil = p;
+      entrarNoApp();
+    });
+  }
+  function entrarNoApp() {
+    var p = estado.perfil;
+    document.body.setAttribute('data-papel', p.papel);
+    $('usuarioNome').textContent = p.nome;
+    $('usuarioPapel').textContent = NOMES.papel[p.papel] || p.papel;
+    aplicarPermissoes();
+    mostrarTela('app');
+    carregarTudo().then(function () { ir(rotaDaUrl()); });
+  }
+  function eGestor() { return !!estado.perfil && estado.perfil.papel === 'gestor'; }
+  function podeAprovar() { return !!estado.perfil && (estado.perfil.papel === 'gestor' || estado.perfil.papel === 'aprovador'); }
+  function aplicarPermissoes() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-so]'), function (el) {
+      var regra = el.getAttribute('data-so');
+      el.hidden = regra === 'gestor' ? !eGestor() : regra === 'aprova' ? !podeAprovar() : false;
+    });
+  }
+
+  /* ---- entrar, esqueci a senha, criar conta, criar senha, sair ---- */
+  var TEXTO_ENTRAR = 'Painel de obras da DPR: quem está na obra envia a atualização, quem aprova libera, e o cliente vê na Central.';
+  var modoEsqueci = false;
+  $('entrarEsqueci').addEventListener('click', function () {
+    modoEsqueci = true;
+    $('entrarTitulo').textContent = 'Recuperar a senha';
+    $('entrarTexto').textContent = 'Digite o e-mail cadastrado. Você recebe um link para criar uma senha nova.';
+    $('campoSenha').hidden = true;
+    $('entrarBotao').textContent = 'Enviar link';
+    $('entrarEsqueci').hidden = true;
+    $('entrarRegistrar').hidden = true;
+    $('entrarVoltar').hidden = false;
+    $('entrarErro').textContent = '';
+  });
+  $('entrarVoltar').addEventListener('click', function () {
+    modoEsqueci = false;
+    $('entrarTitulo').textContent = 'Entrar';
+    $('entrarTexto').textContent = TEXTO_ENTRAR;
+    $('campoSenha').hidden = false;
+    $('entrarBotao').textContent = 'Entrar';
+    $('entrarEsqueci').hidden = false;
+    $('entrarRegistrar').hidden = false;
+    $('entrarVoltar').hidden = true;
+    $('entrarErro').textContent = '';
+  });
+  $('entrarRegistrar').addEventListener('click', function () { $('regErro').textContent = ''; mostrarTela('telaRegistrar'); $('regNome').focus(); });
+  $('regVoltar').addEventListener('click', function () { mostrarTela('telaEntrar'); });
+  /* criar conta: signUp do Supabase com nome e papel nos dados do login; o
+     perfil nasce em carregarPerfil (obras_registrar) assim que a sessao abre */
+  $('formRegistrar').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var nome = $('regNome').value.trim(), email = $('regEmail').value.trim().toLowerCase(), senha = $('regSenha').value, papel = $('regPapel').value;
+    var erro = $('regErro'); erro.textContent = '';
+    if (nome.length < 2) { erro.textContent = 'Digite o seu nome.'; return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { erro.textContent = 'Digite um e-mail válido.'; return; }
+    if (senha.length < 8) { erro.textContent = 'A senha precisa ter pelo menos 8 caracteres.'; return; }
+    var botao = $('regBotao'); botao.disabled = true;
+    sb.auth.signUp({ email: email, password: senha, options: { data: { nome: nome, papel_solicitado: papel, origem: 'obras' }, emailRedirectTo: window.location.origin + window.location.pathname } }).then(function (r) {
+      botao.disabled = false;
+      if (r.error) { erro.textContent = /already|registered|exists/i.test(r.error.message) ? 'Esse e-mail já tem conta. Entre com a senha, ou use "Esqueci a senha".' : mensagemDeErro(r.error); return; }
+      $('regSenha').value = '';
+      if (!r.data || !r.data.session) {
+        // o projeto pede confirmacao por e-mail: a sessao so abre depois do clique no link
+        avisar('Quase lá: confirme o cadastro pelo link que mandamos para ' + email + '.', 'ok');
+        $('entrarEmail').value = email;
+        mostrarTela('telaEntrar');
+      }
+      // com sessao, onAuthStateChange leva para carregarPerfil
+    });
+  });
+  $('formEntrar').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var email = $('entrarEmail').value.trim().toLowerCase();
+    var senha = $('entrarSenha').value;
+    var erro = $('entrarErro');
+    erro.textContent = '';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { erro.textContent = 'Digite um e-mail válido.'; return; }
+    var botao = $('entrarBotao');
+    botao.disabled = true;
+    if (modoEsqueci) {
+      sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname }).then(function (r) {
+        botao.disabled = false;
+        if (r.error) { erro.textContent = mensagemDeErro(r.error); return; }
+        avisar('Se esse e-mail estiver cadastrado, o link chega em instantes.', 'ok');
+        $('entrarVoltar').click();
+      });
+      return;
+    }
+    if (!senha) { erro.textContent = 'Digite a senha.'; botao.disabled = false; return; }
+    sb.auth.signInWithPassword({ email: email, password: senha }).then(function (r) {
+      botao.disabled = false;
+      if (r.error) { erro.textContent = /Invalid login/i.test(r.error.message) ? 'E-mail ou senha errados.' : mensagemDeErro(r.error); return; }
+      $('entrarSenha').value = '';
+    });
+  });
+  $('formSenha').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var s1 = $('senhaNova').value, s2 = $('senhaRepete').value, erro = $('senhaErro');
+    erro.textContent = '';
+    if (s1.length < 8) { erro.textContent = 'A senha precisa ter pelo menos 8 caracteres.'; return; }
+    if (s1 !== s2) { erro.textContent = 'As duas senhas não são iguais.'; return; }
+    var botao = $('senhaBotao');
+    botao.disabled = true;
+    sb.auth.updateUser({ password: s1 }).then(function (r) {
+      botao.disabled = false;
+      if (r.error) { erro.textContent = mensagemDeErro(r.error); return; }
+      estado.definirSenha = false;
+      $('senhaNova').value = ''; $('senhaRepete').value = '';
+      avisar('Senha salva.', 'ok');
+      carregarPerfil();
+    });
+  });
+  /* zera o perfil e a ancora ANTES de deslogar: senao o hashchange redesenha o
+     painel no meio da saida e a ancora volta para a aba padrao */
+  function sair() {
+    estado.perfil = null;
+    if (window.location.hash) window.history.replaceState(null, '', window.location.pathname);
+    sb.auth.signOut().then(function () { aoMudarSessao(null); });
+  }
+  $('sair').addEventListener('click', sair);
+  $('semAcessoSair').addEventListener('click', sair);
+
+  /* ---- navegacao por ancora: cada aba e uma rota ---- */
+  var ROTAS = ['enviar', 'aprovar', 'empreendimentos', 'equipe'];
+  function rotaPadrao() { return podeAprovar() ? 'aprovar' : 'enviar'; }
+  function rotaDaUrl() { var h = window.location.hash.replace('#', ''); return ROTAS.indexOf(h) >= 0 ? h : rotaPadrao(); }
+  function ir(rota) {
+    if (rota === 'aprovar' && !podeAprovar()) rota = rotaPadrao();
+    if ((rota === 'equipe' || rota === 'empreendimentos') && !eGestor()) rota = rotaPadrao();
+    estado.rota = rota;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-painel]'), function (s) { s.hidden = s.getAttribute('data-painel') !== rota; });
+    Array.prototype.forEach.call(document.querySelectorAll('#menu a'), function (a) { a.classList.toggle('ativo', a.getAttribute('data-rota') === rota); });
+    if (window.location.hash.replace('#', '') !== rota) window.history.replaceState(null, '', '#' + rota);
+    desenhar(rota);
+  }
+  window.addEventListener('hashchange', function () { if (estado.perfil && !$('app').hidden) ir(rotaDaUrl()); });
+
+  /* ---- dados ---- */
+  var FONTES = {
+    perfis: ['obras_perfis', 'nome', true],
+    empreendimentos: ['obras_empreendimentos', 'nome', true],
+    etapas: ['obras_etapas', 'ordem', true],
+    atualizacoes: ['obras_atualizacoes', 'criado_em', false]
+  };
+  function carregarTudo() {
+    var nomes = Object.keys(FONTES);
+    return Promise.all(nomes.map(function (n) { return sb.from(FONTES[n][0]).select('*').order(FONTES[n][1], { ascending: FONTES[n][2] }); })).then(function (rs) {
+      var erro = rs.map(function (r) { return r.error; }).filter(Boolean)[0];
+      if (erro) avisar(mensagemDeErro(erro), 'erro');
+      nomes.forEach(function (n, k) { estado[n] = rs[k].data || []; });
+      estado.carregou = true;
+    });
+  }
+  function recarregar(oque) {
+    return sb.from(FONTES[oque][0]).select('*').order(FONTES[oque][1], { ascending: FONTES[oque][2] }).then(function (r) {
+      if (r.error) { avisar(mensagemDeErro(r.error), 'erro'); return; }
+      estado[oque] = r.data || [];
+      desenhar(estado.rota);
+    });
+  }
+  function empPorId(id) { return estado.empreendimentos.filter(function (e) { return e.id === id; })[0] || null; }
+  function etapaPorId(id) { return estado.etapas.filter(function (e) { return e.id === id; })[0] || null; }
+  function perfilPorId(uid) { return estado.perfis.filter(function (p) { return p.user_id === uid; })[0] || null; }
+  function etapasDe(empId) { return estado.etapas.filter(function (e) { return e.empreendimento_id === empId; }); }
+  function minhas() { var eu = estado.perfil.user_id; return estado.atualizacoes.filter(function (a) { return a.enviado_por === eu; }); }
+  function contar(lista, situacao) { return lista.filter(function (a) { return a.situacao === situacao; }).length; }
+  /* data so (AAAA-MM-DD) vira DD/MM/AAAA sem passar por fuso horario */
+  function dataBr(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; }
+  var dataCurta = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+  function cartaoResumo(n, rotulo, cor) { return '<div class="cartao" data-cor="' + cor + '"><span class="num">' + n + '</span><span class="rot">' + esc(rotulo) + '</span></div>'; }
+  function etiqueta(status, mapa) { return '<span class="etiqueta" data-status="' + esc(status) + '">' + esc(mapa[status] || status) + '</span>'; }
+  function aguardandoAprovacao() { return estado.perfis.filter(function (p) { return !p.ativo && !p.aprovado_em; }); }
+
+  /* ---- desenhar cada aba ---- */
+  function desenhar(rota) {
+    if (rota === 'enviar') desenharEnviar();
+    if (rota === 'aprovar') desenharAprovar();
+    if (rota === 'empreendimentos') desenharEmpreendimentos();
+    if (rota === 'equipe') desenharEquipe();
+  }
+  function linhaAtualizacao(a, comQuem) {
+    var emp = empPorId(a.empreendimento_id), et = etapaPorId(a.etapa_id), quem = perfilPorId(a.enviado_por);
+    return '<tr data-id="' + a.id + '">' +
+      '<td><b>' + esc(emp ? emp.nome : '') + '</b></td>' +
+      '<td>' + esc(et ? et.nome : '') + '</td>' +
+      '<td>' + esc(a.titulo) + (a.percentual !== null && a.percentual !== undefined ? ' <small style="color: var(--texto-fraco)">' + a.percentual + '%</small>' : '') + '</td>' +
+      (comQuem ? '<td>' + esc(quem ? quem.nome : '') + '</td><td class="inteiro">' + esc(dataCurta.format(new Date(a.criado_em))) + '</td>' : '<td class="inteiro">' + esc(dataBr(a.data_referencia)) + '</td>') +
+      '<td>' + etiqueta(a.situacao, NOMES.situacao) + '</td>' +
+    '</tr>';
+  }
+  function desenharEnviar() {
+    var ativos = estado.empreendimentos.filter(function (e) { return e.ativo; });
+    var m = minhas();
+    $('enviarTexto').textContent = ativos.length ? 'O que aconteceu na obra, para o cliente ver na Central depois de aprovado. Obras em acompanhamento: ' + ativos.map(function (e) { return e.nome; }).join(', ') + '.' : 'O que aconteceu na obra, para o cliente ver na Central depois de aprovado.';
+    $('enviarResumo').innerHTML =
+      cartaoResumo(ativos.length, ativos.length === 1 ? 'obra em acompanhamento' : 'obras em acompanhamento', '') +
+      cartaoResumo(m.length, m.length === 1 ? 'atualização enviada por você' : 'atualizações enviadas por você', 'azul') +
+      cartaoResumo(contar(m, 'aguardando'), 'aguardando aprovação', 'ambar') +
+      cartaoResumo(contar(m, 'aprovada'), 'aprovadas', 'verde');
+    $('tabelaMinhas').hidden = m.length === 0;
+    $('minhasVazio').hidden = m.length > 0;
+    $('tabelaMinhas').querySelector('tbody').innerHTML = m.map(function (a) { return linhaAtualizacao(a, false); }).join('');
+  }
+  function desenharAprovar() {
+    var todas = estado.atualizacoes;
+    var fila = todas.filter(function (a) { return a.situacao === 'aguardando'; });
+    $('aprovarResumo').innerHTML =
+      cartaoResumo(contar(todas, 'aguardando'), 'aguardando aprovação', 'ambar') +
+      cartaoResumo(contar(todas, 'aprovada'), 'aprovadas', 'verde') +
+      cartaoResumo(contar(todas, 'ajuste'), 'com ajuste pedido', 'azul') +
+      cartaoResumo(contar(todas, 'recusada'), 'recusadas', 'cinza') +
+      cartaoResumo(estado.empreendimentos.filter(function (e) { return e.ativo; }).length, 'obras em acompanhamento', '');
+    var aguardando = aguardandoAprovacao().length;
+    var aviso = $('aprovarAvisoEquipe');
+    aviso.hidden = !(eGestor() && aguardando > 0);
+    if (!aviso.hidden) aviso.innerHTML = '<span><b>' + aguardando + (aguardando === 1 ? ' cadastro aguardando' : ' cadastros aguardando') + '</b> a sua liberação para entrar no painel.</span><a class="botao botao--pequeno" href="#equipe">Ver a equipe</a>';
+    $('tabelaFila').hidden = fila.length === 0;
+    $('filaVazio').hidden = fila.length > 0;
+    $('tabelaFila').querySelector('tbody').innerHTML = fila.map(function (a) { return linhaAtualizacao(a, true); }).join('');
+  }
+
+  /* ---- empreendimentos (gestor) ---- */
+  function desenharEmpreendimentos() {
+    var corpo = $('tabelaEmpreendimentos').querySelector('tbody');
+    $('empreendimentosVazio').hidden = estado.empreendimentos.length > 0;
+    $('tabelaEmpreendimentos').hidden = estado.empreendimentos.length === 0;
+    corpo.innerHTML = estado.empreendimentos.map(function (e) {
+      var ets = etapasDe(e.id), feitas = ets.filter(function (x) { return x.situacao === 'concluida'; }).length;
+      return '<tr data-id="' + e.id + '">' +
+        '<td><b>' + esc(e.nome) + '</b></td>' +
+        '<td>' + esc(e.cidade || '') + '</td>' +
+        '<td class="inteiro">' + esc(dataBr(e.inicio_obra)) + '</td>' +
+        '<td class="inteiro">' + esc(dataBr(e.previsao_entrega)) + '</td>' +
+        '<td class="inteiro">' + (ets.length ? feitas + ' de ' + ets.length + (feitas === 1 ? ' concluída' : ' concluídas') : '') + '</td>' +
+        '<td>' + (e.ativo ? etiqueta('ativo', { ativo: 'Em acompanhamento' }) : etiqueta('inativo', { inativo: 'Encerrado' })) + '</td>' +
+        '<td><div class="acoes"><button type="button" class="botao botao--pequeno" data-editar-emp="' + e.id + '">Editar</button></div></td>' +
+      '</tr>';
+    }).join('');
+  }
+  $('tabelaEmpreendimentos').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-editar-emp]');
+    if (b) abrirEmpreendimento(parseInt(b.getAttribute('data-editar-emp'), 10));
+  });
+  function abrirEmpreendimento(id) {
+    var e = id ? empPorId(id) : null;
+    $('dlgEmpreendimentoTitulo').textContent = e ? 'Editar empreendimento' : 'Novo empreendimento';
+    $('empId').value = e ? e.id : '';
+    $('empNome').value = e ? e.nome : '';
+    $('empCidade').value = e ? (e.cidade || '') : '';
+    $('empInicio').value = e ? (e.inicio_obra || '') : '';
+    $('empPrevisao').value = e ? (e.previsao_entrega || '') : '';
+    $('empAtivo').value = e && !e.ativo ? 'nao' : 'sim';
+    $('empObs').value = e ? (e.observacoes || '') : '';
+    $('empErro').textContent = '';
+    var temAtualizacao = !!e && estado.atualizacoes.some(function (a) { return a.empreendimento_id === e.id; });
+    $('empApagar').hidden = !(e && !temAtualizacao);
+    abrir($('dlgEmpreendimento'));
+    $('empNome').focus();
+  }
+  $('novoEmpreendimento').addEventListener('click', function () { abrirEmpreendimento(null); });
+  $('formEmpreendimento').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (!eGestor()) return;
+    var erro = $('empErro'); erro.textContent = '';
+    var dados = {
+      nome: $('empNome').value.trim().replace(/\s+/g, ' '),
+      cidade: $('empCidade').value.trim() || null,
+      inicio_obra: $('empInicio').value || null,
+      previsao_entrega: $('empPrevisao').value || null,
+      ativo: $('empAtivo').value !== 'nao',
+      observacoes: $('empObs').value.trim() || null
+    };
+    if (dados.nome.length < 2) { erro.textContent = 'Dê um nome ao empreendimento, igual ao da Central.'; return; }
+    if (dados.inicio_obra && dados.previsao_entrega && dados.previsao_entrega < dados.inicio_obra) { erro.textContent = 'A previsão de entrega não pode ser antes do início da obra.'; return; }
+    var id = $('empId').value ? parseInt($('empId').value, 10) : null;
+    var botao = $('empSalvar'); botao.disabled = true;
+    var q = id ? sb.from('obras_empreendimentos').update(dados).eq('id', id).select().single() : sb.from('obras_empreendimentos').insert(dados).select().single();
+    q.then(function (r) {
+      botao.disabled = false;
+      if (r.error) { erro.textContent = mensagemDeErro(r.error); return; }
+      $('dlgEmpreendimento').close();
+      avisar(id ? 'Empreendimento atualizado.' : 'Empreendimento criado, com as quatro etapas padrão.', 'ok');
+      // as etapas padrao nascem no banco junto com o empreendimento
+      Promise.all([recarregar('empreendimentos'), recarregar('etapas')]);
+    });
+  });
+  $('empApagar').addEventListener('click', function () {
+    var id = parseInt($('empId').value, 10), e = empPorId(id);
+    if (!e || !window.confirm('Excluir "' + e.nome + '"? Só é possível porque ele ainda não tem atualizações.')) return;
+    sb.from('obras_empreendimentos').delete().eq('id', id).then(function (r) {
+      if (r.error) { $('empErro').textContent = mensagemDeErro(r.error); return; }
+      $('dlgEmpreendimento').close();
+      avisar('Empreendimento excluído.', 'ok');
+      Promise.all([recarregar('empreendimentos'), recarregar('etapas')]);
+    });
+  });
+
+  /* ---- equipe (gestor): aprovar cadastros, trocar papel, desativar ---- */
+  function desenharEquipe() {
+    var corpo = $('tabelaEquipe').querySelector('tbody');
+    var eu = estado.perfil.user_id;
+    var aguardando = aguardandoAprovacao().length;
+    var aviso = $('equipeAviso');
+    aviso.hidden = aguardando === 0;
+    if (!aviso.hidden) aviso.innerHTML = '<span><b>' + aguardando + (aguardando === 1 ? ' cadastro aguardando liberação.' : ' cadastros aguardando liberação.') + '</b> Confira o papel pedido, ajuste se precisar e toque em Aprovar.</span>';
+    // quem aguarda vem primeiro; depois, por nome
+    var lista = estado.perfis.slice().sort(function (a, b) { var pa = (!a.ativo && !a.aprovado_em) ? 0 : 1, pb = (!b.ativo && !b.aprovado_em) ? 0 : 1; return pa !== pb ? pa - pb : String(a.nome).localeCompare(String(b.nome), 'pt-BR'); });
+    corpo.innerHTML = lista.map(function (p) {
+      var souEu = p.user_id === eu;
+      var esperando = !p.ativo && !p.aprovado_em;
+      return '<tr data-user="' + esc(p.user_id) + '">' +
+        '<td><b>' + esc(p.nome) + '</b>' + (souEu ? ' <small style="color: var(--texto-fraco)">(você)</small>' : '') + '</td>' +
+        '<td>' + esc(p.email) + '</td>' +
+        '<td>' + (!souEu ? '<select class="papel-sel" data-papel-de="' + esc(p.user_id) + '" aria-label="Papel de ' + esc(p.nome) + '">' + PAPEIS.map(function (x) { return '<option value="' + x + '"' + (x === p.papel ? ' selected' : '') + '>' + NOMES.papel[x] + '</option>'; }).join('') + '</select>' : etiqueta(p.papel, NOMES.papel)) + '</td>' +
+        '<td>' + (esperando ? etiqueta('aguardando', { aguardando: 'Aguardando liberação' }) : !p.ativo ? etiqueta('inativo', { inativo: 'Inativo' }) : etiqueta('ativo', { ativo: 'Ativo' })) + '</td>' +
+        '<td>' + (!souEu ? (esperando
+            ? '<div class="acoes"><button type="button" class="botao botao--pequeno botao--cheio" data-aprovar-de="' + esc(p.user_id) + '">Aprovar</button><button type="button" class="botao botao--pequeno" data-recusar-de="' + esc(p.user_id) + '">Recusar</button></div>'
+            : '<button type="button" class="botao botao--pequeno" data-ativo-de="' + esc(p.user_id) + '" data-ativo="' + (p.ativo ? '1' : '0') + '">' + (p.ativo ? 'Desativar' : 'Reativar') + '</button>') : '') + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+  $('tabelaEquipe').addEventListener('change', function (ev) {
+    var s = ev.target.closest('[data-papel-de]');
+    if (!s) return;
+    var uid = s.getAttribute('data-papel-de');
+    sb.from('obras_perfis').update({ papel: s.value }).eq('user_id', uid).then(function (r) {
+      if (r.error) { avisar(mensagemDeErro(r.error), 'erro'); recarregar('perfis'); return; }
+      avisar('Papel atualizado.', 'ok');
+      recarregar('perfis');
+    });
+  });
+  $('tabelaEquipe').addEventListener('click', function (ev) {
+    var ap = ev.target.closest('[data-aprovar-de]');
+    if (ap) {
+      var uidAp = ap.getAttribute('data-aprovar-de');
+      var pAp = perfilPorId(uidAp);
+      sb.from('obras_perfis').update({ ativo: true, aprovado_em: new Date().toISOString() }).eq('user_id', uidAp).then(function (r) {
+        if (r.error) { avisar(mensagemDeErro(r.error), 'erro'); return; }
+        avisar((pAp ? pAp.nome : 'Cadastro') + ' liberado como ' + (pAp ? (NOMES.papel[pAp.papel] || pAp.papel).toLowerCase() : '') + '.', 'ok');
+        recarregar('perfis');
+      });
+      return;
+    }
+    var rec = ev.target.closest('[data-recusar-de]');
+    if (rec) {
+      var uidRec = rec.getAttribute('data-recusar-de');
+      var pRec = perfilPorId(uidRec);
+      if (!window.confirm('Recusar o cadastro de ' + (pRec ? pRec.nome : 'esta pessoa') + '? Ela continua sem acesso e fica como desativada.')) return;
+      sb.from('obras_perfis').update({ ativo: false, aprovado_em: new Date().toISOString() }).eq('user_id', uidRec).then(function (r) {
+        if (r.error) { avisar(mensagemDeErro(r.error), 'erro'); return; }
+        avisar('Cadastro recusado.', 'ok');
+        recarregar('perfis');
+      });
+      return;
+    }
+    var b = ev.target.closest('[data-ativo-de]');
+    if (!b) return;
+    var uid = b.getAttribute('data-ativo-de');
+    var ativar = b.getAttribute('data-ativo') === '0';
+    var p = perfilPorId(uid);
+    if (!ativar && !window.confirm('Desativar ' + (p ? p.nome : 'esta pessoa') + '? Ela perde o acesso ao painel na hora, mas o histórico fica.')) return;
+    sb.from('obras_perfis').update({ ativo: ativar }).eq('user_id', uid).then(function (r) {
+      if (r.error) { avisar(mensagemDeErro(r.error), 'erro'); return; }
+      avisar(ativar ? 'Acesso reativado.' : 'Acesso desativado.', 'ok');
+      recarregar('perfis');
+    });
+  });
+
+  /* ---- dialogos: abrir e fechar ---- */
+  Array.prototype.forEach.call(document.querySelectorAll('dialog'), function (d) {
+    d.addEventListener('click', function (ev) { if (ev.target === d) d.close(); });
+    Array.prototype.forEach.call(d.querySelectorAll('[data-fechar]'), function (b) { b.addEventListener('click', function () { d.close(); }); });
+  });
+  function abrir(d) { if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', ''); }
+
+  /* ---- arranque: link de senha, depois a sessao ---- */
+  var url = new URL(window.location.href);
+  var parametros = url.hash.indexOf('access_token') >= 0 || url.hash.indexOf('type=') >= 0 ? new URLSearchParams(url.hash.replace(/^#/, '')) : null;
+  var tipoLink = (parametros && parametros.get('type')) || url.searchParams.get('type') || '';
+  if (tipoLink === 'invite' || tipoLink === 'recovery') estado.definirSenha = true;
+  var codigo = url.searchParams.get('code');
+  var prontoParaSessao = Promise.resolve();
+  if (codigo) {
+    prontoParaSessao = sb.auth.exchangeCodeForSession(codigo).then(function (r) {
+      if (r.error) avisar('Esse link não vale mais. Peça um novo.', 'erro');
+      else if (tipoLink !== 'signup') estado.definirSenha = true;   // chegou por link de recuperacao de senha
+    });
+  }
+  if (codigo || tipoLink) window.history.replaceState(null, '', url.pathname);
+  prontoParaSessao.then(function () {
+    sb.auth.onAuthStateChange(function (evento, sessao) {
+      if (evento === 'PASSWORD_RECOVERY') estado.definirSenha = true;
+      if (evento === 'TOKEN_REFRESHED') { estado.sessao = sessao; return; }
+      aoMudarSessao(sessao);
+    });
+  });
+
+  /* para os testes */
+  window.OBRAS = { estado: estado, ir: ir, eGestor: eGestor, podeAprovar: podeAprovar, dataBr: dataBr };
+})();
+</script>
+</body>
+</html>
