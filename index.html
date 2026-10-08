@@ -71,6 +71,8 @@
   .botao:focus-visible { outline: 2px solid var(--vermelho); outline-offset: 2px; }
   .botao--cheio { background: var(--vermelho); border-color: var(--vermelho); color: #fff; }
   .botao--cheio:hover { background: var(--vermelho-escuro); border-color: var(--vermelho-escuro); }
+  .botao--verde { background: var(--verde); border-color: var(--verde); color: #fff; }
+  .botao--verde:hover { background: #1b5e20; border-color: #1b5e20; }
   .botao--leve { border-color: transparent; background: transparent; color: var(--texto-fraco); }
   .botao--leve:hover { background: rgba(0, 0, 0, 0.05); color: var(--texto); }
   .botao[disabled] { opacity: 0.55; cursor: default; pointer-events: none; }
@@ -184,6 +186,15 @@
   .linha li[data-tipo="nota"]::before { background: var(--texto); }
   .linha li small { display: block; color: var(--texto-fraco); font-size: 12px; }
   .situacao-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 13px; color: var(--texto-fraco); }
+  /* a decisao do aprovador, acima da linha do tempo */
+  .decisao { display: grid; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--linha); }
+  .decisao h3 { font-size: 14px; }
+  .decisao textarea { min-height: 64px; }
+  .decisao-botoes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .anotar { display: grid; gap: 8px; }
+  .anotar textarea { min-height: 56px; padding: 8px 10px; border: 1px solid var(--linha); border-radius: 8px; font-size: 14px; resize: vertical; background: #fff; }
+  .anotar textarea:focus { outline: none; border-color: var(--vermelho); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12); }
+  .anotar .botao { justify-self: start; }
   .observacao { padding: 12px 14px; border-radius: 8px; background: #e3f2fd; border-left: 4px solid var(--azul); font-size: 14px; }
   .observacao b { color: var(--azul); }
   .observacao[data-situacao="recusada"] { background: #eceff1; border-left-color: var(--cinza); }
@@ -378,7 +389,7 @@
       <div class="resumo" id="aprovarResumo"></div>
       <div class="cartao tabela-caixa">
         <table id="tabelaFila">
-          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Fotos</th><th>Enviado por</th><th>Quando</th><th>Situação</th></tr></thead>
+          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Fotos</th><th>Enviado por</th><th>Quando</th><th>Situação</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
         <div class="vazio" id="filaVazio" hidden><b id="filaVazioTitulo">Nenhuma atualização aguardando</b><span id="filaVazioTexto">Quando alguém da obra enviar, aparece aqui para você aprovar, pedir ajuste ou recusar.</span></div>
@@ -473,8 +484,30 @@
         </div>
       </div>
       <aside class="ficha-lado" id="atuLado" hidden>
+        <!-- so para quem aprova: a decisao -->
+        <div class="decisao" id="atuDecisao" hidden>
+          <h3>Decisão</h3>
+          <div class="campo" id="campoEtapaSituacao">
+            <label for="atuEtapaSituacao">Situação da etapa <span id="atuEtapaNome"></span></label>
+            <select id="atuEtapaSituacao"><option value="a_fazer">A fazer</option><option value="em_andamento">Em andamento</option><option value="concluida">Concluída</option></select>
+            <span class="dica">Vale ao aprovar. É a marca que o cliente vê na barra da obra.</span>
+          </div>
+          <div class="campo"><label for="atuObs">Observação para a obra</label><textarea id="atuObs" rows="2" maxlength="1000" placeholder="Obrigatória para pedir ajuste ou recusar."></textarea></div>
+          <p class="erro" id="atuDecisaoErro" role="alert"></p>
+          <div class="decisao-botoes">
+            <button type="button" class="botao botao--verde" id="atuAprovar">Aprovar</button>
+            <button type="button" class="botao" id="atuAjuste">Pedir ajuste</button>
+            <button type="button" class="botao botao--leve" id="atuRecusar">Recusar</button>
+            <button type="button" class="botao" id="atuVoltarFila" hidden>Voltar para a fila</button>
+          </div>
+        </div>
         <h3>Linha do tempo</h3>
         <ol class="linha" id="atuLinha"></ol>
+        <div class="anotar" id="atuAnotarCaixa">
+          <label class="sr" for="atuNota">Anotação</label>
+          <textarea id="atuNota" rows="2" maxlength="1000" placeholder="Anotar algo no histórico desta atualização"></textarea>
+          <button type="button" class="botao botao--pequeno" id="atuAnotar">Anotar</button>
+        </div>
       </aside>
     </div>
   </form>
@@ -754,6 +787,7 @@
       '<td class="inteiro">' + (n === 0 ? '<span style="color: var(--texto-fraco)">sem foto</span>' : n === 1 ? '1 foto' : n + ' fotos') + '</td>' +
       (comQuem ? '<td>' + esc(quem ? quem.nome : '') + '</td><td class="inteiro">' + esc(dataCurta.format(new Date(a.criado_em))) + '</td>' : '<td class="inteiro">' + esc(dataBr(a.data_referencia)) + '</td>') +
       '<td>' + etiqueta(a.situacao, NOMES.situacao) + '</td>' +
+      (comQuem ? '<td><button type="button" class="botao botao--pequeno" data-abrir="' + a.id + '">' + (a.situacao === 'aguardando' && podeAprovar() ? 'Decidir' : 'Abrir') + '</button></td>' : '') +
     '</tr>';
   }
   function desenharEnviar() {
@@ -858,13 +892,72 @@
     $('atuApagar').hidden = !(a && ((edita && a.situacao === 'aguardando') || eGestor()));
     $('atuErro').textContent = ''; $('atuProgresso').textContent = '';
     desenharFotos();
-    // linha do tempo
+    // linha do tempo, anotacao e, para quem aprova, a decisao
     $('atuLado').hidden = !a;
     $('atuLinha').innerHTML = '';
+    $('atuNota').value = '';
+    var dec = $('atuDecisao');
+    dec.hidden = !podeDecidir(a);
+    if (!dec.hidden) {
+      var et = etapaPorId(a.etapa_id);
+      var pendente = a.situacao === 'aguardando' || a.situacao === 'ajuste';
+      $('campoEtapaSituacao').hidden = !et || !pendente;
+      $('atuEtapaNome').textContent = et ? '"' + et.nome + '"' : '';
+      $('atuEtapaSituacao').value = et ? et.situacao : 'em_andamento';
+      $('atuObs').value = '';
+      $('atuObs').placeholder = pendente ? 'Obrigatória para pedir ajuste ou recusar.' : 'Opcional: por que voltou para a fila.';
+      $('atuDecisaoErro').textContent = '';
+      $('atuAprovar').hidden = !pendente; $('atuAjuste').hidden = !pendente; $('atuRecusar').hidden = !pendente;
+      $('atuVoltarFila').hidden = pendente;
+    }
     if (a) carregarLinhaAtualizacao(a.id);
     abrir($('dlgAtualizacao'));
     if (edita) $(a ? 'atuTitulo' : 'atuEmpreendimento').focus();
+    else if (!dec.hidden && !$('atuAprovar').hidden) $('atuObs').focus();
   }
+  /* ---- a decisao: aprovar, pedir ajuste, recusar, voltar para a fila.
+     O banco (gatilho) carimba quem decidiu e quando; aqui so mandamos a
+     situacao e a observacao. A etapa muda so ao aprovar. ---- */
+  function podeDecidir(a) { return !!a && podeAprovar(); }
+  var MENSAGEM_DECISAO = { aprovada: 'Aprovada. Vai aparecer para o cliente na Central.', ajuste: 'Devolvida para a obra ajustar.', recusada: 'Recusada. A obra vê o motivo.', aguardando: 'Voltou para a fila.' };
+  function decidir(situacao) {
+    var a = fichaAberta;
+    if (!podeDecidir(a)) return;
+    var obs = $('atuObs').value.trim(), erro = $('atuDecisaoErro'); erro.textContent = '';
+    if ((situacao === 'ajuste' || situacao === 'recusada') && obs.length < 3) { erro.textContent = situacao === 'ajuste' ? 'Diga à obra o que precisa ajustar.' : 'Diga o motivo da recusa.'; $('atuObs').focus(); return; }
+    if (situacao === 'recusada' && !window.confirm('Recusar "' + a.titulo + '"? A obra vê o motivo e a atualização não vai para o cliente.')) return;
+    if (situacao === 'aguardando' && !window.confirm('Voltar "' + a.titulo + '" para a fila? Ela deixa de estar ' + (a.situacao === 'aprovada' ? 'aprovada e sai da Central' : 'recusada') + '.')) return;
+    var botoes = ['atuAprovar', 'atuAjuste', 'atuRecusar', 'atuVoltarFila'];
+    botoes.forEach(function (b) { $(b).disabled = true; });
+    $('atuProgresso').textContent = 'Salvando a decisão...';
+    var et = etapaPorId(a.etapa_id), novaSit = $('atuEtapaSituacao').value;
+    var mudaEtapa = situacao === 'aprovada' && et && !$('campoEtapaSituacao').hidden && et.situacao !== novaSit;
+    sb.from('obras_atualizacoes').update({ situacao: situacao, observacao_aprovador: obs || null }).eq('id', a.id).select().single().then(function (r) {
+      if (r.error) { botoes.forEach(function (b) { $(b).disabled = false; }); $('atuProgresso').textContent = ''; erro.textContent = mensagemDeErro(r.error); return; }
+      return (mudaEtapa ? sb.from('obras_etapas').update({ situacao: novaSit }).eq('id', et.id) : Promise.resolve({})).then(function (re) {
+        botoes.forEach(function (b) { $(b).disabled = false; }); $('atuProgresso').textContent = '';
+        $('dlgAtualizacao').close();
+        if (re && re.error) avisar('A decisão foi salva, mas a etapa não mudou: ' + mensagemDeErro(re.error), 'erro');
+        else avisar(MENSAGEM_DECISAO[situacao] + (mudaEtapa ? ' Etapa "' + et.nome + '" agora ' + (NOMES.etapa[novaSit] || novaSit).toLowerCase() + '.' : ''), 'ok');
+        return Promise.all([recarregar('atualizacoes'), recarregar('etapas')]);
+      });
+    });
+  }
+  $('atuAprovar').addEventListener('click', function () { decidir('aprovada'); });
+  $('atuAjuste').addEventListener('click', function () { decidir('ajuste'); });
+  $('atuRecusar').addEventListener('click', function () { decidir('recusada'); });
+  $('atuVoltarFila').addEventListener('click', function () { decidir('aguardando'); });
+  $('atuAnotar').addEventListener('click', function () {
+    var a = fichaAberta, texto = $('atuNota').value.trim();
+    if (!a || !texto) return;
+    var botao = $('atuAnotar'); botao.disabled = true;
+    sb.from('obras_eventos').insert({ atualizacao_id: a.id, tipo: 'nota', texto: texto, autor: estado.perfil.user_id }).then(function (r) {
+      botao.disabled = false;
+      if (r.error) { avisar(mensagemDeErro(r.error), 'erro'); return; }
+      $('atuNota').value = '';
+      carregarLinhaAtualizacao(a.id);
+    });
+  });
   function desenharFotos() {
     var edita = podeEditarAtualizacao(fichaAberta);
     var existentes = fichaAberta ? fotosDe(fichaAberta.id).filter(function (f) { return fotosParaRemover.indexOf(f.id) < 0; }) : [];
@@ -1002,7 +1095,7 @@
       return Promise.all([recarregar('atualizacoes'), recarregar('fotos')]);
     });
   });
-  var NOMES_EVENTO = { enviada: 'Enviada para aprovação', reenviada: 'Corrigida e reenviada', aprovada: 'Aprovada', ajuste: 'Ajuste pedido', recusada: 'Recusada', nota: 'Anotação' };
+  var NOMES_EVENTO = { enviada: 'Enviada para aprovação', reenviada: 'De volta à fila', aprovada: 'Aprovada', ajuste: 'Ajuste pedido', recusada: 'Recusada', nota: 'Anotação' };
   function carregarLinhaAtualizacao(id) {
     return sb.from('obras_eventos').select('*').eq('atualizacao_id', id).order('criado_em', { ascending: false }).then(function (r) {
       if (r.error) { $('atuLinha').innerHTML = '<li>' + esc(mensagemDeErro(r.error)) + '</li>'; return; }

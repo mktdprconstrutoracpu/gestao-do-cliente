@@ -21,18 +21,18 @@ o mesmo nome que a Central usa) e **Equipe** (quem entra e com que papel).
 
 1. **Base**: banco, login, cadastro com aprovacao, as duas abas com a
    estrutura e o historico, Empreendimentos e Equipe.
-2. **Enviar** (esta): a ficha completa (empreendimento, etapa, percentual,
-   texto, data, fotos no Storage), edicao enquanto aguarda ou esta em
-   ajuste, linha do tempo, filtro da fila por situacao.
-3. **Aprovar**: aprovar, pedir ajuste ou recusar com observacao, marcar
-   etapa concluida.
+2. **Enviar**: a ficha completa (empreendimento, etapa, percentual, texto,
+   data, fotos no Storage), edicao enquanto aguarda ou esta em ajuste, linha
+   do tempo, filtro da fila por situacao.
+3. **Aprovar** (esta): aprovar, pedir ajuste ou recusar com observacao,
+   marcar a situacao da etapa ao aprovar, voltar para a fila, anotacoes.
 4. **Central lendo as aprovadas**: a pagina "Evolucao da obra" deixa de ser
    demonstracao e passa a mostrar as atualizacoes aprovadas do empreendimento
    da casa do cliente (as travas para isso ja estao no `sql/001_obras.sql`).
 5. Aviso ao cliente quando sai atualizacao nova; aviso ao aprovador quando a
    obra envia.
 
-## O que ja tem (etapas 1 e 2)
+## O que ja tem (etapas 1 a 3)
 
 | Tela | O que faz |
 |---|---|
@@ -40,7 +40,7 @@ o mesmo nome que a Central usa) e **Equipe** (quem entra e com que papel).
 | Criar conta | Nome, e-mail, senha e papel (obra, aprovador, gestor). O **primeiro** cadastro vira gestor na hora; os seguintes ficam **aguardando liberacao** de um gestor |
 | Sem acesso | Login que existe mas nao esta na equipe do painel (um cliente da Central, por exemplo) ve so esta tela |
 | Enviar atualizacao | Resumo (obras em acompanhamento, enviadas por voce, aguardando, aprovadas) e a tabela do que voce enviou, com a contagem de fotos. "Nova atualizacao" abre a **ficha**: empreendimento (so os em acompanhamento), etapa da obra (a "em andamento" ja vem escolhida), titulo, texto, andamento geral em %, data (hoje) e ate 10 fotos, da galeria ou da camera. Tocar numa linha abre a ficha: **editavel** enquanto aguarda ou esta em ajuste (texto e fotos; ao reenviar volta para a fila), **so leitura** depois de aprovada ou recusada. Em ajuste, a observacao do aprovador aparece no alto. Excluir enquanto aguarda. Linha do tempo ao lado |
-| Aprovar | Resumo (aguardando, aprovadas, com ajuste, recusadas, obras) e a fila, com filtro por situacao (aguardando por padrao, ajuste, aprovadas, recusadas, todas), quem enviou e quando. Tocar na linha abre a ficha so para ver, com as fotos e a linha do tempo. Aviso de cadastros aguardando liberacao (gestor). A decisao (aprovar, ajuste, recusar) entra na etapa 3 |
+| Aprovar | Resumo (aguardando, aprovadas, com ajuste, recusadas, obras) e a fila, com filtro por situacao (aguardando por padrao, ajuste, aprovadas, recusadas, todas), quem enviou, quando e o botao Decidir (ou Abrir). A ficha abre com as fotos, a linha do tempo e o bloco **Decisao**: observacao para a obra, **Aprovar** (com a situacao da etapa: a fazer, em andamento, concluida), **Pedir ajuste** e **Recusar** (os dois exigem a observacao, que a obra ve na ficha dela). Em atualizacao ja decidida, **Voltar para a fila** desfaz. Quem ve a ficha pode **anotar** na linha do tempo. O banco carimba quem decidiu e quando. Aviso de cadastros aguardando liberacao (gestor) |
 | Empreendimentos | Lista e cadastro: nome (igual ao da Central), cidade, inicio da obra, previsao de entrega, situacao, observacoes. Todo empreendimento novo nasce com quatro etapas padrao (Fundacao e terraplenagem, Estrutura e alvenaria, Instalacoes e acabamento, Paisagismo e entrega) |
 | Equipe | Quem usa o painel e com que papel; o gestor libera ou recusa os cadastros novos (ajustando o papel antes, se quiser), troca o papel e desativa (nunca apaga) |
 
