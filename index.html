@@ -602,6 +602,7 @@
   }
   function mensagemDeErro(erro) {
     var m = (erro && (erro.message || erro.motivo)) || String(erro || 'erro');
+    if (/not confirmed/i.test(m)) return 'Este e-mail ainda não foi confirmado: abra o link que mandamos para ele, ou peça uma senha nova em "Esqueci a senha".';
     if (/duplicate key|unique/i.test(m)) return 'Já existe um empreendimento com esse nome.';
     if (/row-level security|permission denied|violates|Somente|so pode|Nao da para/i.test(m)) return 'Você não tem permissão para fazer isso.';
     if (/foreign key|restrict/i.test(m)) return 'Não dá para excluir: há atualizações ligadas a este empreendimento.';
