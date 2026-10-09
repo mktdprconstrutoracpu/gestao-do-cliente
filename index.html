@@ -147,6 +147,9 @@
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   td.inteiro { white-space: nowrap; }
   td .acoes { gap: 6px; }
+  /* a linha de titulo de cada mes nas listas de atualizacoes (por mes, 09/10) */
+  .grupo-mes td { padding: 16px 14px 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-fraco); font-weight: 700; background: #fff; }
+  tbody tr.grupo-mes:hover { background: #fff; }
   .papel-sel { min-height: 36px; padding: 6px 10px; border: 1px solid var(--linha); border-radius: 8px; background: #fff; font-size: 14px; }
   .papel-sel:focus { outline: none; border-color: var(--vermelho); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12); }
   .vazio { padding: 40px 20px; text-align: center; color: var(--texto-fraco); }
@@ -362,7 +365,7 @@
       <div class="resumo" id="enviarResumo"></div>
       <div class="cartao tabela-caixa">
         <table id="tabelaMinhas">
-          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Fotos</th><th>Data</th><th>Situação</th></tr></thead>
+          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Mês</th><th>Fotos</th><th>Situação</th></tr></thead>
           <tbody></tbody>
         </table>
         <div class="vazio" id="minhasVazio" hidden><b>Nenhuma atualização enviada ainda</b><span id="minhasVazioTexto">Toque em "Nova atualização". Ela aparece aqui com a situação: aguardando aprovação, aprovada, ajuste pedido ou recusada.</span></div>
@@ -389,7 +392,7 @@
       <div class="resumo" id="aprovarResumo"></div>
       <div class="cartao tabela-caixa">
         <table id="tabelaFila">
-          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Fotos</th><th>Enviado por</th><th>Quando</th><th>Situação</th><th></th></tr></thead>
+          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Mês</th><th>Fotos</th><th>Enviado por</th><th>Quando</th><th>Situação</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
         <div class="vazio" id="filaVazio" hidden><b id="filaVazioTitulo">Nenhuma atualização aguardando</b><span id="filaVazioTexto">Quando alguém da obra enviar, aparece aqui para você aprovar, pedir ajuste ou recusar.</span></div>
@@ -467,7 +470,11 @@
         <div class="campo"><label for="atuTexto">O que aconteceu</label><textarea id="atuTexto" maxlength="2000" placeholder="Um texto curto, do jeito que o cliente vai ler na Central."></textarea></div>
         <div class="campos-2">
           <div class="campo"><label for="atuPercentual">Andamento geral da obra (%)</label><input id="atuPercentual" type="number" inputmode="numeric" min="0" max="100" step="1" placeholder="0 a 100"><span class="dica">Opcional. É o número da barra de andamento na Central.</span></div>
-          <div class="campo"><label for="atuData">Data</label><input id="atuData" type="date" required></div>
+          <!-- POR MES (09/10/2026, pedido dela: "a pessoa coloca fotos por mes"):
+               o mes no lugar da data solta. Um select, e nao input type=month,
+               porque o type=month nao existe no Firefox nem no Safari do
+               computador. O banco guarda o dia 1 do mes em data_referencia. -->
+          <div class="campo"><label for="atuMes">Mês</label><select id="atuMes" required></select><span class="dica">O mês a que as fotos se referem. O cliente vê a obra mês a mês.</span></div>
         </div>
         <div class="fotos">
           <div class="fotos-cabeca"><span>Fotos <span id="atuFotosConta"></span></span><button type="button" class="botao botao--pequeno" id="atuAddFoto">Adicionar fotos</button></div>
@@ -766,6 +773,21 @@
   /* data so (AAAA-MM-DD) vira DD/MM/AAAA sem passar por fuso horario */
   function dataBr(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; }
   function hoje() { var d = new Date(); return d.getFullYear() + '-' + dois(d.getMonth() + 1) + '-' + dois(d.getDate()); }
+  /* o mes (por mes, 09/10): "AAAA-MM" por dentro, "Outubro de 2026" e "Out/2026" na tela */
+  var MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  function mesDe(iso) { var m = /^(\d{4})-(\d{2})/.exec(String(iso || '')); return m ? m[1] + '-' + m[2] : ''; }
+  function mesNome(iso) { var m = /^(\d{4})-(\d{2})/.exec(String(iso || '')); var n = m ? MESES[parseInt(m[2], 10) - 1] : ''; return n ? n + ' de ' + m[1] : ''; }
+  function mesCurto(iso) { var m = /^(\d{4})-(\d{2})/.exec(String(iso || '')); var n = m ? MESES[parseInt(m[2], 10) - 1] : ''; return n ? n.slice(0, 3) + '/' + m[1] : ''; }
+  function mesAtual() { var d = new Date(); return d.getFullYear() + '-' + dois(d.getMonth() + 1); }
+  function somaMeses(ym, n) { var p = ym.split('-'); var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1 + n, 1); return d.getFullYear() + '-' + dois(d.getMonth() + 1); }
+  /* do mes que vem ate dois anos atras; o mes de uma atualizacao antiga entra mesmo fora disso */
+  function opcoesMeses(select, valor) {
+    var lista = [];
+    for (var k = 1; k >= -24; k--) lista.push(somaMeses(mesAtual(), k));
+    if (valor && lista.indexOf(valor) < 0) { lista.push(valor); lista.sort().reverse(); }
+    select.innerHTML = lista.map(function (ym) { return '<option value="' + ym + '">' + esc(mesNome(ym)) + '</option>'; }).join('');
+    select.value = valor || mesAtual();
+  }
   var dataCurta = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
   function cartaoResumo(n, rotulo, cor) { return '<div class="cartao" data-cor="' + cor + '"><span class="num">' + n + '</span><span class="rot">' + esc(rotulo) + '</span></div>'; }
   function etiqueta(status, mapa) { return '<span class="etiqueta" data-status="' + esc(status) + '">' + esc(mapa[status] || status) + '</span>'; }
@@ -784,11 +806,29 @@
       '<td><b>' + esc(emp ? emp.nome : '') + '</b></td>' +
       '<td>' + esc(et ? et.nome : '') + '</td>' +
       '<td>' + esc(a.titulo) + (a.percentual !== null && a.percentual !== undefined ? ' <small style="color: var(--texto-fraco)">' + a.percentual + '%</small>' : '') + '</td>' +
+      '<td class="inteiro">' + esc(mesCurto(a.data_referencia)) + '</td>' +
       '<td class="inteiro">' + (n === 0 ? '<span style="color: var(--texto-fraco)">sem foto</span>' : n === 1 ? '1 foto' : n + ' fotos') + '</td>' +
-      (comQuem ? '<td>' + esc(quem ? quem.nome : '') + '</td><td class="inteiro">' + esc(dataCurta.format(new Date(a.criado_em))) + '</td>' : '<td class="inteiro">' + esc(dataBr(a.data_referencia)) + '</td>') +
+      (comQuem ? '<td>' + esc(quem ? quem.nome : '') + '</td><td class="inteiro">' + esc(dataCurta.format(new Date(a.criado_em))) + '</td>' : '') +
       '<td>' + etiqueta(a.situacao, NOMES.situacao) + '</td>' +
       (comQuem ? '<td><button type="button" class="botao botao--pequeno" data-abrir="' + a.id + '">' + (a.situacao === 'aguardando' && podeAprovar() ? 'Decidir' : 'Abrir') + '</button></td>' : '') +
     '</tr>';
+  }
+  /* as listas vem agrupadas por mes, o mais recente primeiro, com uma linha de
+     titulo a cada mes novo; dentro do mes, a enviada por ultimo primeiro. As
+     linhas de titulo nao tem data-id: tocar nelas nao abre nada. */
+  function linhasPorMes(lista, comQuem, colunas) {
+    var ordenada = lista.slice().sort(function (x, y) {
+      var a = mesDe(x.data_referencia), b = mesDe(y.data_referencia);
+      if (a !== b) return a < b ? 1 : -1;
+      return String(x.criado_em) < String(y.criado_em) ? 1 : -1;
+    });
+    var html = '', mesAnterior = null;
+    ordenada.forEach(function (a) {
+      var m = mesDe(a.data_referencia);
+      if (m !== mesAnterior) { html += '<tr class="grupo-mes"><td colspan="' + colunas + '">' + esc(mesNome(m) || 'Sem mês') + '</td></tr>'; mesAnterior = m; }
+      html += linhaAtualizacao(a, comQuem);
+    });
+    return html;
   }
   function desenharEnviar() {
     var ativos = estado.empreendimentos.filter(function (e) { return e.ativo; });
@@ -804,7 +844,7 @@
     $('tabelaMinhas').hidden = m.length === 0;
     $('minhasVazio').hidden = m.length > 0;
     $('minhasVazioTexto').textContent = ativos.length === 0 ? (eGestor() ? 'Cadastre um empreendimento em acompanhamento primeiro, na aba Empreendimentos.' : 'Ainda não há obra em acompanhamento. Peça ao gestor para cadastrar o empreendimento.') : 'Toque em "Nova atualização". Ela aparece aqui com a situação: aguardando aprovação, aprovada, ajuste pedido ou recusada.';
-    $('tabelaMinhas').querySelector('tbody').innerHTML = m.map(function (a) { return linhaAtualizacao(a, false); }).join('');
+    $('tabelaMinhas').querySelector('tbody').innerHTML = linhasPorMes(m, false, 6);
   }
   var TEXTO_FILA = {
     aguardando: ['Nenhuma atualização aguardando', 'Quando alguém da obra enviar, aparece aqui para você aprovar, pedir ajuste ou recusar.'],
@@ -832,7 +872,7 @@
     $('filaVazio').hidden = fila.length > 0;
     $('filaVazioTitulo').textContent = TEXTO_FILA[filtro][0];
     $('filaVazioTexto').textContent = TEXTO_FILA[filtro][1];
-    $('tabelaFila').querySelector('tbody').innerHTML = fila.map(function (a) { return linhaAtualizacao(a, true); }).join('');
+    $('tabelaFila').querySelector('tbody').innerHTML = linhasPorMes(fila, true, 9);
   }
   $('filaSituacao').addEventListener('change', function () { estado.filtroFila = this.value; desenharAprovar(); });
   // tocar numa linha (ou Enter) abre a ficha
@@ -848,6 +888,11 @@
   var fichaAberta = null;        // a atualizacao aberta, ou null quando e nova
   var fotosNovas = [];           // { arquivo, nome, url } ainda nao enviadas
   var fotosParaRemover = [];     // ids de obras_fotos marcadas para sair ao salvar
+  var tituloAutomatico = '';     // na ficha nova, o titulo nasce com o nome do mes e acompanha o select ate ser trocado a mao
+  $('atuMes').addEventListener('change', function () {
+    var t = $('atuTitulo');
+    if (!t.value.trim() || t.value === tituloAutomatico) { tituloAutomatico = mesNome(this.value); t.value = tituloAutomatico; }
+  });
   function urlDaFoto(caminho) { var r = sb.storage.from('obras').getPublicUrl(caminho); return r && r.data && r.data.publicUrl ? r.data.publicUrl : ''; }
   function podeEditarAtualizacao(a) { return !a || (a.enviado_por === estado.perfil.user_id && (a.situacao === 'aguardando' || a.situacao === 'ajuste')); }
   function opcoesEmpreendimentosAtivos(select, valor) {
@@ -880,11 +925,12 @@
     // campos
     opcoesEmpreendimentosAtivos($('atuEmpreendimento'), a ? a.empreendimento_id : null);
     opcoesEtapasDe($('atuEtapa'), parseInt($('atuEmpreendimento').value, 10), a ? a.etapa_id : null);
-    $('atuTitulo').value = a ? a.titulo : '';
+    opcoesMeses($('atuMes'), a ? mesDe(a.data_referencia) : null);
+    tituloAutomatico = a ? '' : mesNome($('atuMes').value);
+    $('atuTitulo').value = a ? a.titulo : tituloAutomatico;
     $('atuTexto').value = a ? (a.texto || '') : '';
     $('atuPercentual').value = a && a.percentual !== null && a.percentual !== undefined ? a.percentual : '';
-    $('atuData').value = a ? (a.data_referencia || '').slice(0, 10) : hoje();
-    ['atuEmpreendimento', 'atuEtapa', 'atuTitulo', 'atuTexto', 'atuPercentual', 'atuData'].forEach(function (c) { $(c).disabled = !edita; });
+    ['atuEmpreendimento', 'atuEtapa', 'atuTitulo', 'atuTexto', 'atuPercentual', 'atuMes'].forEach(function (c) { $(c).disabled = !edita; });
     if (a) $('atuEmpreendimento').disabled = true;   // o banco nao deixa trocar o empreendimento depois
     $('atuAddFoto').hidden = !edita;
     $('atuSalvar').hidden = !edita;
@@ -1051,13 +1097,13 @@
       titulo: $('atuTitulo').value.trim().replace(/\s+/g, ' '),
       texto: $('atuTexto').value.trim() || null,
       percentual: $('atuPercentual').value === '' ? null : parseInt($('atuPercentual').value, 10),
-      data_referencia: $('atuData').value || hoje()
+      data_referencia: ($('atuMes').value || mesAtual()) + '-01'   // o mes vira o dia 1; a Central agrupa por mes
     };
     if (!empId) { erro.textContent = 'Escolha o empreendimento.'; return; }
     if (etapasDe(empId).length && !etapaId) { erro.textContent = 'Escolha a etapa da obra.'; return; }
     if (dados.titulo.length < 3) { erro.textContent = 'Dê um título curto à atualização.'; $('atuTitulo').focus(); return; }
     if (dados.percentual !== null && !(dados.percentual >= 0 && dados.percentual <= 100)) { erro.textContent = 'O andamento é um número de 0 a 100.'; $('atuPercentual').focus(); return; }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dados.data_referencia)) { erro.textContent = 'Informe a data.'; return; }
+    if (!/^\d{4}-\d{2}-01$/.test(dados.data_referencia)) { erro.textContent = 'Escolha o mês.'; $('atuMes').focus(); return; }
     var totalFotos = (a ? fotosDe(a.id).filter(function (f) { return fotosParaRemover.indexOf(f.id) < 0; }).length : 0) + fotosNovas.length;
     if (totalFotos === 0 && !window.confirm('Enviar sem foto? O cliente vê melhor a obra com foto, e o aprovador pode pedir ajuste.')) return;
     var botao = $('atuSalvar'); botao.disabled = true; $('atuAddFoto').disabled = true;
@@ -1287,7 +1333,7 @@
   });
 
   /* para os testes */
-  window.OBRAS = { estado: estado, ir: ir, eGestor: eGestor, podeAprovar: podeAprovar, dataBr: dataBr, abrirAtualizacao: abrirAtualizacao, reduzirFoto: reduzirFoto };
+  window.OBRAS = { estado: estado, ir: ir, eGestor: eGestor, podeAprovar: podeAprovar, dataBr: dataBr, mesNome: mesNome, mesCurto: mesCurto, abrirAtualizacao: abrirAtualizacao, reduzirFoto: reduzirFoto };
 })();
 </script>
 </body>

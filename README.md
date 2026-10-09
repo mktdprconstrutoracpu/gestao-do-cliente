@@ -24,8 +24,12 @@ o mesmo nome que a Central usa) e **Equipe** (quem entra e com que papel).
 2. **Enviar**: a ficha completa (empreendimento, etapa, percentual, texto,
    data, fotos no Storage), edicao enquanto aguarda ou esta em ajuste, linha
    do tempo, filtro da fila por situacao.
-3. **Aprovar** (esta): aprovar, pedir ajuste ou recusar com observacao,
+3. **Aprovar**: aprovar, pedir ajuste ou recusar com observacao,
    marcar a situacao da etapa ao aprovar, voltar para a fila, anotacoes.
+   - **Por mes** (esta, 09/10/2026, pedido dela: "a pessoa coloca fotos por
+     mes"): a ficha pede o **mes** em vez da data, o titulo ja vem com o
+     nome do mes, e as listas de quem envia e a fila de aprovacao ficam
+     agrupadas por mes, do mais recente para o mais antigo.
 4. **Central lendo as aprovadas**: a pagina "Evolucao da obra" deixa de ser
    demonstracao e passa a mostrar as atualizacoes aprovadas do empreendimento
    da casa do cliente (as travas para isso ja estao no `sql/001_obras.sql`).
@@ -39,8 +43,8 @@ o mesmo nome que a Central usa) e **Equipe** (quem entra e com que papel).
 | Entrar | E-mail e senha do Supabase; "Esqueci a senha" manda o link de recuperacao |
 | Criar conta | Nome, e-mail, senha e papel (obra, aprovador, gestor). O **primeiro** cadastro vira gestor na hora; os seguintes ficam **aguardando liberacao** de um gestor |
 | Sem acesso | Login que existe mas nao esta na equipe do painel (um cliente da Central, por exemplo) ve so esta tela |
-| Enviar atualizacao | Resumo (obras em acompanhamento, enviadas por voce, aguardando, aprovadas) e a tabela do que voce enviou, com a contagem de fotos. "Nova atualizacao" abre a **ficha**: empreendimento (so os em acompanhamento), etapa da obra (a "em andamento" ja vem escolhida), titulo, texto, andamento geral em %, data (hoje) e ate 10 fotos, da galeria ou da camera. Tocar numa linha abre a ficha: **editavel** enquanto aguarda ou esta em ajuste (texto e fotos; ao reenviar volta para a fila), **so leitura** depois de aprovada ou recusada. Em ajuste, a observacao do aprovador aparece no alto. Excluir enquanto aguarda. Linha do tempo ao lado |
-| Aprovar | Resumo (aguardando, aprovadas, com ajuste, recusadas, obras) e a fila, com filtro por situacao (aguardando por padrao, ajuste, aprovadas, recusadas, todas), quem enviou, quando e o botao Decidir (ou Abrir). A ficha abre com as fotos, a linha do tempo e o bloco **Decisao**: observacao para a obra, **Aprovar** (com a situacao da etapa: a fazer, em andamento, concluida), **Pedir ajuste** e **Recusar** (os dois exigem a observacao, que a obra ve na ficha dela). Em atualizacao ja decidida, **Voltar para a fila** desfaz. Quem ve a ficha pode **anotar** na linha do tempo. O banco carimba quem decidiu e quando. Aviso de cadastros aguardando liberacao (gestor) |
+| Enviar atualizacao | Resumo (obras em acompanhamento, enviadas por voce, aguardando, aprovadas) e a tabela do que voce enviou, **agrupada por mes** (o mais recente primeiro), com o mes e a contagem de fotos. "Nova atualizacao" abre a **ficha**: empreendimento (so os em acompanhamento), etapa da obra (a "em andamento" ja vem escolhida), titulo (ja vem com o nome do mes, ex. "Outubro de 2026", e pode ser trocado), texto, andamento geral em %, **mes** (o atual, ou outro ate dois anos atras) e ate 10 fotos, da galeria ou da camera. Tocar numa linha abre a ficha: **editavel** enquanto aguarda ou esta em ajuste (texto e fotos; ao reenviar volta para a fila), **so leitura** depois de aprovada ou recusada. Em ajuste, a observacao do aprovador aparece no alto. Excluir enquanto aguarda. Linha do tempo ao lado |
+| Aprovar | Resumo (aguardando, aprovadas, com ajuste, recusadas, obras) e a fila, agrupada por mes, com filtro por situacao (aguardando por padrao, ajuste, aprovadas, recusadas, todas), o mes, quem enviou, quando e o botao Decidir (ou Abrir). A ficha abre com as fotos, a linha do tempo e o bloco **Decisao**: observacao para a obra, **Aprovar** (com a situacao da etapa: a fazer, em andamento, concluida), **Pedir ajuste** e **Recusar** (os dois exigem a observacao, que a obra ve na ficha dela). Em atualizacao ja decidida, **Voltar para a fila** desfaz. Quem ve a ficha pode **anotar** na linha do tempo. O banco carimba quem decidiu e quando. Aviso de cadastros aguardando liberacao (gestor) |
 | Empreendimentos | Lista e cadastro: nome (igual ao da Central), cidade, inicio da obra, previsao de entrega, situacao, observacoes. Todo empreendimento novo nasce com quatro etapas padrao (Fundacao e terraplenagem, Estrutura e alvenaria, Instalacoes e acabamento, Paisagismo e entrega) |
 | Equipe | Quem usa o painel e com que papel; o gestor libera ou recusa os cadastros novos (ajustando o papel antes, se quiser), troca o papel e desativa (nunca apaga) |
 
@@ -184,3 +188,10 @@ ela e feita para o navegador e, sem login, nao abre nada.
 - **Quem sai fica inativo**, nunca e apagado: o historico das atualizacoes
   precisa continuar apontando para a pessoa.
 - **Fim de linha LF** forcado pelo `.gitattributes`.
+- **Atualizacoes por mes** (09/10/2026, pedido dela: "a pessoa coloca fotos
+  por mes"): a ficha pede o mes, nao a data. O banco guarda o dia 1 do mes em
+  `data_referencia`, sem coluna nova, entao o que ja foi enviado continua
+  valendo. Pode haver mais de um envio no mesmo mes (etapas diferentes). As
+  listas vem agrupadas por mes, e a Central vai mostrar a obra mes a mes. O
+  campo e um select (nao `input type=month`, que o Firefox e o Safari do
+  computador nao tem): do mes que vem ate dois anos atras.
