@@ -333,6 +333,24 @@
       <h1 id="semAcessoTitulo">Sua conta não tem acesso ao painel</h1>
       <p id="semAcessoTexto">Este login existe, mas não está na equipe do painel de obras.</p>
     </div>
+    <!-- PEDIR ACESSO (09/10/2026): o login da Central e do CRM e o mesmo deste
+         painel, entao quem ja tem conta entra direto e nunca passa pela tela
+         "Criar conta". Ate aqui essa tela so tinha "Sair" (ela mesma caiu
+         nela). Agora quem tem login mas nao tem perfil diz o nome e o papel e
+         entra na equipe pela mesma obras_registrar: o primeiro vira gestor,
+         os seguintes aguardam um gestor. So aparece quando nao ha perfil. -->
+    <form id="formPedirAcesso" novalidate hidden>
+      <div class="campo"><label for="acessoNome">Seu nome</label><input id="acessoNome" autocomplete="name" maxlength="120" required></div>
+      <div class="campo"><label for="acessoPapel">Papel</label>
+        <select id="acessoPapel">
+          <option value="obra">Obra: envia as fotos e o andamento, mês a mês</option>
+          <option value="aprovador">Aprovador: aprova ou pede ajuste antes de ir para o cliente</option>
+          <option value="gestor">Gestor: tudo, inclusive pessoas e empreendimentos</option>
+        </select>
+      </div>
+      <p class="erro" id="acessoErro" role="alert"></p>
+      <button type="submit" class="botao botao--cheio" id="acessoBotao">Entrar na equipe do painel</button>
+    </form>
     <button type="button" class="botao" id="semAcessoSair">Sair</button>
   </div>
 </section>
@@ -343,8 +361,9 @@
     <div class="topo-dentro">
       <a class="marca" href="#"><i>DPR</i>Gestão do Cliente</a>
       <nav aria-label="Abas do painel" id="menu">
-        <a href="#enviar" data-rota="enviar">Enviar atualização</a>
-        <a href="#aprovar" data-rota="aprovar" data-so="aprova">Aprovar</a>
+        <!-- os nomes das duas abas sao os dela (09/10): "Gestão de obras" e "Aprovação"; as rotas continuam enviar e aprovar -->
+        <a href="#enviar" data-rota="enviar">Gestão de obras</a>
+        <a href="#aprovar" data-rota="aprovar" data-so="aprova">Aprovação</a>
         <a href="#empreendimentos" data-rota="empreendimentos" data-so="gestor">Empreendimentos</a>
         <a href="#equipe" data-rota="equipe" data-so="gestor">Equipe</a>
       </nav>
@@ -359,7 +378,7 @@
     <!-- Aba 1: Enviar atualizacao (quem esta na obra) -->
     <section class="painel" id="painelEnviar" data-painel="enviar" hidden>
       <div class="cabeca">
-        <div><h1>Enviar atualização</h1><p id="enviarTexto">O que aconteceu na obra, para o cliente ver na Central depois de aprovado.</p></div>
+        <div><h1>Gestão de obras</h1><p id="enviarTexto">As fotos e o andamento da obra, mês a mês, para o cliente ver na Central depois de aprovado.</p></div>
         <div class="acoes"><button type="button" class="botao botao--cheio" id="novaAtualizacao">Nova atualização</button></div>
       </div>
       <div class="resumo" id="enviarResumo"></div>
@@ -375,7 +394,7 @@
     <!-- Aba 2: Aprovar (Luana, Rodrigo, gestor) -->
     <section class="painel" id="painelAprovar" data-painel="aprovar" hidden>
       <div class="cabeca">
-        <div><h1>Aprovar</h1><p>Tudo o que a obra envia passa por aqui antes de chegar ao cliente. Nada é publicado sem alguém da DPR aprovar. Toque numa linha para abrir.</p></div>
+        <div><h1>Aprovação</h1><p>Tudo o que a obra envia passa por aqui antes de chegar ao cliente. Nada é publicado sem alguém da DPR aprovar. Toque numa linha para abrir.</p></div>
         <div class="acoes">
           <div class="campo"><label class="sr" for="filaSituacao">Situação</label>
             <select id="filaSituacao" class="papel-sel">
@@ -575,11 +594,31 @@
     if (estado.definirSenha) { mostrarTela('telaSenha'); return; }
     carregarPerfil();
   }
-  function semAcesso(titulo, texto) {
+  function semAcesso(titulo, texto, podePedir) {
     $('semAcessoTitulo').textContent = titulo;
     $('semAcessoTexto').textContent = texto;
+    var form = $('formPedirAcesso');
+    form.hidden = !podePedir;
+    if (podePedir) {
+      var u = (estado.sessao && estado.sessao.user) || {}, meta = u.user_metadata || {};
+      $('acessoNome').value = meta.nome || meta.name || meta.full_name || (u.email ? u.email.split('@')[0] : '');
+      $('acessoErro').textContent = '';
+    }
     mostrarTela('telaSemAcesso');
+    if (podePedir) $('acessoNome').focus();
   }
+  // quem tem login mas nao tem perfil entra na equipe por aqui (ver o comentario da tela)
+  $('formPedirAcesso').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var nome = $('acessoNome').value.trim(), papel = $('acessoPapel').value, erro = $('acessoErro'); erro.textContent = '';
+    if (nome.length < 2) { erro.textContent = 'Digite o seu nome.'; $('acessoNome').focus(); return; }
+    var botao = $('acessoBotao'); botao.disabled = true;
+    sb.rpc('obras_registrar', { p_nome: nome, p_papel: papel }).then(function (r) {
+      botao.disabled = false;
+      if (r.error) { erro.textContent = mensagemDeErro(r.error); return; }
+      return carregarPerfil(true);
+    });
+  });
   /* Quem acabou de se cadastrar pela tela "Criar conta" ainda nao tem perfil:
      o signUp guardou nome e papel nos dados do login (origem: obras), e a
      funcao obras_registrar cria o perfil (o primeiro vira gestor; os outros
@@ -595,7 +634,7 @@
           return carregarPerfil(true);
         });
       }
-      if (!p) { semAcesso('Sua conta não tem acesso ao painel', 'Este login existe, mas não está na equipe do painel de obras. Crie uma conta do painel, ou peça a um gestor da DPR.'); return; }
+      if (!p) { semAcesso('Sua conta ainda não está no painel', 'Este login existe (é o mesmo da Central e do CRM), mas não está na equipe do painel de obras. Diga o seu nome e o seu papel para entrar. O primeiro cadastro vira gestor; os seguintes entram depois que um gestor liberar.', true); return; }
       if (!p.ativo && !p.aprovado_em) { semAcesso('Cadastro recebido', 'Seu cadastro como ' + (NOMES.papel[p.papel] || p.papel).toLowerCase() + ' está aguardando a liberação de um gestor da DPR. Quando liberar, é só entrar de novo.'); return; }
       if (!p.ativo) { semAcesso('Sua conta foi desativada', 'Esta conta foi desativada no painel. Fale com um gestor da DPR.'); return; }
       estado.perfil = p;
@@ -833,7 +872,7 @@
   function desenharEnviar() {
     var ativos = estado.empreendimentos.filter(function (e) { return e.ativo; });
     var m = minhas();
-    $('enviarTexto').textContent = ativos.length ? 'O que aconteceu na obra, para o cliente ver na Central depois de aprovado. Obras em acompanhamento: ' + ativos.map(function (e) { return e.nome; }).join(', ') + '.' : 'O que aconteceu na obra, para o cliente ver na Central depois de aprovado.';
+    $('enviarTexto').textContent = ativos.length ? 'As fotos e o andamento da obra, mês a mês, para o cliente ver na Central depois de aprovado. Obras em acompanhamento: ' + ativos.map(function (e) { return e.nome; }).join(', ') + '.' : 'As fotos e o andamento da obra, mês a mês, para o cliente ver na Central depois de aprovado.';
     $('enviarResumo').innerHTML =
       cartaoResumo(ativos.length, ativos.length === 1 ? 'obra em acompanhamento' : 'obras em acompanhamento', '') +
       cartaoResumo(m.length, m.length === 1 ? 'atualização enviada por você' : 'atualizações enviadas por você', 'azul') +

@@ -11,8 +11,10 @@ publicado pela Vercel.
 
 | Aba | Quem usa | O que faz |
 |---|---|---|
-| **Enviar atualizacao** | papel `obra` (e tambem aprovador e gestor) | Entra com o proprio login e envia o que aconteceu na obra. Ve so o que ela mesma enviou e a situacao de cada envio |
-| **Aprovar** | papel `aprovador` (Luana, Rodrigo) e `gestor` | A fila do que a obra enviou. Aprova, pede ajuste ou recusa. Nada chega ao cliente sem passar por aqui |
+| **Gestao de obras** (rota `#enviar`) | papel `obra` (e tambem aprovador e gestor) | Entra com o proprio login e envia as fotos e o andamento da obra, mes a mes. Ve so o que ela mesma enviou e a situacao de cada envio |
+| **Aprovacao** (rota `#aprovar`) | papel `aprovador` (Luana, Rodrigo) e `gestor` | A fila do que a obra enviou. Aprova, pede ajuste ou recusa. Nada chega ao cliente sem passar por aqui |
+
+Os nomes das abas sao os dela (09/10/2026): "Gestao de obras" e "Aprovacao".
 
 Mais duas abas, so do gestor: **Empreendimentos** (as obras acompanhadas, com
 o mesmo nome que a Central usa) e **Equipe** (quem entra e com que papel).
@@ -42,7 +44,7 @@ o mesmo nome que a Central usa) e **Equipe** (quem entra e com que papel).
 |---|---|
 | Entrar | E-mail e senha do Supabase; "Esqueci a senha" manda o link de recuperacao |
 | Criar conta | Nome, e-mail, senha e papel (obra, aprovador, gestor). O **primeiro** cadastro vira gestor na hora; os seguintes ficam **aguardando liberacao** de um gestor |
-| Sem acesso | Login que existe mas nao esta na equipe do painel (um cliente da Central, por exemplo) ve so esta tela |
+| Sem acesso | Login que existe mas nao esta na equipe do painel. Como o login e o mesmo da Central e do CRM, quem ja tem conta cai aqui sem passar por "Criar conta": a tela pede o **nome e o papel** e a pessoa **entra na equipe** na hora (o primeiro vira gestor; os seguintes aguardam um gestor liberar). Quem esta aguardando liberacao, ou foi desativado, ve so o aviso e o botao Sair |
 | Enviar atualizacao | Resumo (obras em acompanhamento, enviadas por voce, aguardando, aprovadas) e a tabela do que voce enviou, **agrupada por mes** (o mais recente primeiro), com o mes e a contagem de fotos. "Nova atualizacao" abre a **ficha**: empreendimento (so os em acompanhamento), etapa da obra (a "em andamento" ja vem escolhida), titulo (ja vem com o nome do mes, ex. "Outubro de 2026", e pode ser trocado), texto, andamento geral em %, **mes** (o atual, ou outro ate dois anos atras) e ate 10 fotos, da galeria ou da camera. Tocar numa linha abre a ficha: **editavel** enquanto aguarda ou esta em ajuste (texto e fotos; ao reenviar volta para a fila), **so leitura** depois de aprovada ou recusada. Em ajuste, a observacao do aprovador aparece no alto. Excluir enquanto aguarda. Linha do tempo ao lado |
 | Aprovar | Resumo (aguardando, aprovadas, com ajuste, recusadas, obras) e a fila, agrupada por mes, com filtro por situacao (aguardando por padrao, ajuste, aprovadas, recusadas, todas), o mes, quem enviou, quando e o botao Decidir (ou Abrir). A ficha abre com as fotos, a linha do tempo e o bloco **Decisao**: observacao para a obra, **Aprovar** (com a situacao da etapa: a fazer, em andamento, concluida), **Pedir ajuste** e **Recusar** (os dois exigem a observacao, que a obra ve na ficha dela). Em atualizacao ja decidida, **Voltar para a fila** desfaz. Quem ve a ficha pode **anotar** na linha do tempo. O banco carimba quem decidiu e quando. Aviso de cadastros aguardando liberacao (gestor) |
 | Empreendimentos | Lista e cadastro: nome (igual ao da Central), cidade, inicio da obra, previsao de entrega, situacao, observacoes. Todo empreendimento novo nasce com quatro etapas padrao (Fundacao e terraplenagem, Estrutura e alvenaria, Instalacoes e acabamento, Paisagismo e entrega) |
