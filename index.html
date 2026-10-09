@@ -100,6 +100,12 @@
   .entrada-caixa form { display: grid; gap: 14px; }
   .entrada-caixa .botao { min-height: 46px; }
   .entrada-caixa .pe { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+  /* as duas opcoes da tela inicial */
+  .escolhas { display: grid; gap: 12px; }
+  .escolha { display: grid; gap: 4px; text-align: left; padding: 16px 18px; min-height: 44px; border: 1px solid var(--linha); border-radius: 12px; background: #fff; cursor: pointer; font: inherit; color: inherit; transition: border-color 0.15s, box-shadow 0.15s; }
+  .escolha b { font-family: var(--titulo); font-size: 18px; }
+  .escolha span { font-size: 14px; color: var(--texto-fraco); }
+  .escolha:hover, .escolha:focus-visible { border-color: var(--vermelho); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12); outline: none; }
   .entrada-caixa .pe button { background: none; border: 0; min-height: 44px; padding: 10px 0; color: var(--vermelho); font-weight: 600; cursor: pointer; }
   .carregando { min-height: 100vh; display: grid; place-items: center; color: var(--texto-fraco); font-weight: 600; }
 
@@ -255,6 +261,27 @@
 
 <div class="carregando" id="telaCarregando">Abrindo o painel...</div>
 
+<!-- ================================================== tela inicial ======= -->
+<!-- AS DUAS OPCOES ANTES DO LOGIN (09/10/2026, pedido dela: "nao esta na tela
+     inicial as 2 opcoes antes do login"). Quem chega sem sessao escolhe o
+     painel, Gestao de obras ou Aprovacao, e so depois entra. A escolha fica
+     em estado.destino (e no sessionStorage, para sobreviver a um recarregar)
+     e vira a aba aberta depois do login; quem nao pode aprovar e levado para
+     a Gestao de obras pela trava de rotas de sempre. Sair volta para ca. -->
+<section class="entrada" id="telaInicio" hidden>
+  <div class="entrada-caixa">
+    <span class="marca"><i>DPR</i>Gestão do Cliente</span>
+    <div>
+      <h1>O que você vai fazer?</h1>
+      <p>Escolha o painel. Depois é só entrar com o seu login.</p>
+    </div>
+    <div class="escolhas">
+      <button type="button" class="escolha" data-destino="enviar"><b>Gestão de obras</b><span>Enviar as fotos e o andamento da obra, mês a mês.</span></button>
+      <button type="button" class="escolha" data-destino="aprovar"><b>Aprovação</b><span>Aprovar o que a obra enviou antes de ir para a Central do Cliente.</span></button>
+    </div>
+  </div>
+</section>
+
 <!-- ======================================================= entrar ======= -->
 <section class="entrada" id="telaEntrar" hidden>
   <div class="entrada-caixa">
@@ -269,6 +296,7 @@
       <p class="erro" id="entrarErro" role="alert"></p>
       <button type="submit" class="botao botao--cheio" id="entrarBotao">Entrar</button>
       <div class="pe">
+        <button type="button" id="entrarInicio">Trocar de painel</button>
         <button type="button" id="entrarEsqueci">Esqueci a senha</button>
         <button type="button" id="entrarRegistrar">Criar conta</button>
         <button type="button" id="entrarVoltar" hidden>Voltar para entrar</button>
@@ -584,16 +612,38 @@
   }
 
   /* ---- telas ---- */
-  var TELAS = ['telaCarregando', 'telaEntrar', 'telaRegistrar', 'telaSenha', 'telaSemAcesso', 'app'];
+  var TELAS = ['telaCarregando', 'telaInicio', 'telaEntrar', 'telaRegistrar', 'telaSenha', 'telaSemAcesso', 'app'];
   function mostrarTela(id) { TELAS.forEach(function (t) { $(t).hidden = t !== id; }); }
 
   /* ---- a sessao ---- */
   function aoMudarSessao(sessao) {
     estado.sessao = sessao;
-    if (!sessao) { estado.perfil = null; estado.carregou = false; mostrarTela('telaEntrar'); return; }
+    // sem sessao: a tela inicial com as duas opcoes; quem ja escolheu vai direto para entrar
+    if (!sessao) { estado.perfil = null; estado.carregou = false; if (estado.destino) escolherDestino(estado.destino); else mostrarTela('telaInicio'); return; }
     if (estado.definirSenha) { mostrarTela('telaSenha'); return; }
     carregarPerfil();
   }
+  /* a escolha da tela inicial: guarda o destino e abre a tela de entrar com o
+     titulo do painel escolhido */
+  var TEXTO_DESTINO = {
+    enviar: ['Entrar na Gestão de obras', 'Entre com o seu login para enviar as fotos e o andamento da obra, mês a mês.'],
+    aprovar: ['Entrar na Aprovação', 'Entre com o seu login para aprovar o que a obra enviou, antes de ir para a Central do Cliente.']
+  };
+  function guardarDestino(d) { estado.destino = d || null; try { if (d) window.sessionStorage.setItem('obras_destino', d); else window.sessionStorage.removeItem('obras_destino'); } catch (e) {} }
+  function lerDestino() { try { var d = window.sessionStorage.getItem('obras_destino'); return d === 'enviar' || d === 'aprovar' ? d : null; } catch (e) { return null; } }
+  function escolherDestino(d) {
+    guardarDestino(d);
+    $('entrarTitulo').textContent = TEXTO_DESTINO[d] ? TEXTO_DESTINO[d][0] : 'Entrar';
+    $('entrarTexto').textContent = TEXTO_DESTINO[d] ? TEXTO_DESTINO[d][1] : 'Painel de obras da DPR: quem está na obra envia a atualização, quem aprova libera, e o cliente vê na Central.';
+    $('entrarErro').textContent = '';
+    mostrarTela('telaEntrar');
+    $('entrarEmail').focus();
+  }
+  estado.destino = lerDestino();
+  Array.prototype.forEach.call(document.querySelectorAll('#telaInicio [data-destino]'), function (b) {
+    b.addEventListener('click', function () { escolherDestino(b.getAttribute('data-destino')); });
+  });
+  $('entrarInicio').addEventListener('click', function () { guardarDestino(null); mostrarTela('telaInicio'); });
   function semAcesso(titulo, texto, podePedir) {
     $('semAcessoTitulo').textContent = titulo;
     $('semAcessoTexto').textContent = texto;
@@ -648,7 +698,10 @@
     $('usuarioPapel').textContent = NOMES.papel[p.papel] || p.papel;
     aplicarPermissoes();
     mostrarTela('app');
-    carregarTudo().then(function () { ir(rotaDaUrl()); });
+    // a aba aberta e o painel escolhido na tela inicial (ir() leva quem nao pode aprovar para a Gestao de obras)
+    var destino = estado.destino;
+    guardarDestino(null);
+    carregarTudo().then(function () { ir(destino && ROTAS.indexOf(destino) >= 0 ? destino : rotaDaUrl()); });
   }
   function eGestor() { return !!estado.perfil && estado.perfil.papel === 'gestor'; }
   function podeAprovar() { return !!estado.perfil && (estado.perfil.papel === 'gestor' || estado.perfil.papel === 'aprovador'); }
@@ -755,6 +808,7 @@
      painel no meio da saida e a ancora volta para a aba padrao */
   function sair() {
     estado.perfil = null;
+    guardarDestino(null);   // sair volta para a tela inicial, com as duas opcoes
     if (window.location.hash) window.history.replaceState(null, '', window.location.pathname);
     sb.auth.signOut().then(function () { aoMudarSessao(null); });
   }

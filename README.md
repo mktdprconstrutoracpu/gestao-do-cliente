@@ -15,6 +15,10 @@ publicado pela Vercel.
 | **Aprovacao** (rota `#aprovar`) | papel `aprovador` (Luana, Rodrigo) e `gestor` | A fila do que a obra enviou. Aprova, pede ajuste ou recusa. Nada chega ao cliente sem passar por aqui |
 
 Os nomes das abas sao os dela (09/10/2026): "Gestao de obras" e "Aprovacao".
+E as duas opcoes aparecem **antes do login**, na tela inicial (pedido dela no
+mesmo dia): quem chega sem sessao escolhe o painel, entra, e cai na aba
+escolhida (quem nao pode aprovar cai na Gestao de obras). Sair volta para a
+tela inicial; "Trocar de painel" na tela de entrar tambem.
 
 Mais duas abas, so do gestor: **Empreendimentos** (as obras acompanhadas, com
 o mesmo nome que a Central usa) e **Equipe** (quem entra e com que papel).
@@ -42,7 +46,8 @@ o mesmo nome que a Central usa) e **Equipe** (quem entra e com que papel).
 
 | Tela | O que faz |
 |---|---|
-| Entrar | E-mail e senha do Supabase; "Esqueci a senha" manda o link de recuperacao |
+| Tela inicial | Sem sessao, as duas opcoes: **Gestao de obras** e **Aprovacao**. A escolha vira a aba aberta depois do login |
+| Entrar | E-mail e senha do Supabase, com o titulo do painel escolhido; "Esqueci a senha" manda o link de recuperacao; "Trocar de painel" volta para a tela inicial |
 | Criar conta | Nome, e-mail, senha e papel (obra, aprovador, gestor). O **primeiro** cadastro vira gestor na hora; os seguintes ficam **aguardando liberacao** de um gestor |
 | Sem acesso | Login que existe mas nao esta na equipe do painel. Como o login e o mesmo da Central e do CRM, quem ja tem conta cai aqui sem passar por "Criar conta": a tela pede o **nome e o papel** e a pessoa **entra na equipe** na hora (o primeiro vira gestor; os seguintes aguardam um gestor liberar). Quem esta aguardando liberacao, ou foi desativado, ve so o aviso e o botao Sair |
 | Enviar atualizacao | Resumo (obras em acompanhamento, enviadas por voce, aguardando, aprovadas) e a tabela do que voce enviou, **agrupada por mes** (o mais recente primeiro), com o mes e a contagem de fotos. "Nova atualizacao" abre a **ficha**: empreendimento (so os em acompanhamento), etapa da obra (a "em andamento" ja vem escolhida), titulo (ja vem com o nome do mes, ex. "Outubro de 2026", e pode ser trocado), texto, andamento geral em %, **mes** (o atual, ou outro ate dois anos atras) e ate 10 fotos, da galeria ou da camera. Tocar numa linha abre a ficha: **editavel** enquanto aguarda ou esta em ajuste (texto e fotos; ao reenviar volta para a fila), **so leitura** depois de aprovada ou recusada. Em ajuste, a observacao do aprovador aparece no alto. Excluir enquanto aguarda. Linha do tempo ao lado |
