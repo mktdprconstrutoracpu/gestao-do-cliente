@@ -666,7 +666,8 @@
     sb.rpc('obras_registrar', { p_nome: nome, p_papel: papel }).then(function (r) {
       botao.disabled = false;
       if (r.error) { erro.textContent = mensagemDeErro(r.error); return; }
-      return carregarPerfil(true);
+      // usa o perfil devolvido pela funcao: nao depende da trava de leitura (ver tratarPerfil)
+      return r.data ? tratarPerfil(r.data) : carregarPerfil(true);
     });
   });
   /* Quem acabou de se cadastrar pela tela "Criar conta" ainda nao tem perfil:
@@ -680,16 +681,29 @@
       var meta = (estado.sessao.user && estado.sessao.user.user_metadata) || {};
       if (!p && meta.origem === 'obras' && !jaRegistrou) {
         return sb.rpc('obras_registrar', { p_nome: meta.nome || '', p_papel: meta.papel_solicitado || 'obra' }).then(function (rr) {
-          if (rr.error) { avisar(mensagemDeErro(rr.error), 'erro'); }
-          return carregarPerfil(true);
+          if (rr.error) { avisar(mensagemDeErro(rr.error), 'erro'); return carregarPerfil(true); }
+          // a funcao devolve o perfil (ela le por dentro, sem a trava): usa o que veio
+          return rr.data ? tratarPerfil(rr.data) : carregarPerfil(true);
         });
       }
-      if (!p) { semAcesso('Sua conta ainda não está no painel', 'Este login existe (é o mesmo da Central e do CRM), mas não está na equipe do painel de obras. Diga o seu nome e o seu papel para entrar. O primeiro cadastro vira gestor; os seguintes entram depois que um gestor liberar.', true); return; }
-      if (!p.ativo && !p.aprovado_em) { semAcesso('Cadastro recebido', 'Seu cadastro como ' + (NOMES.papel[p.papel] || p.papel).toLowerCase() + ' está aguardando a liberação de um gestor da DPR. Quando liberar, é só entrar de novo.'); return; }
-      if (!p.ativo) { semAcesso('Sua conta foi desativada', 'Esta conta foi desativada no painel. Fale com um gestor da DPR.'); return; }
-      estado.perfil = p;
-      entrarNoApp();
+      return tratarPerfil(p);
     });
+  }
+  /* O que fazer com o perfil lido, ou devolvido pela obras_registrar.
+     ATENCAO (09/10/2026, "quando eu coloco entrar na equipe nao acontece
+     nada"): com so o 001 no banco, a trava de leitura de obras_perfis so
+     deixa ler quem ja esta ATIVO; quem acabou de pedir acesso e ficou
+     aguardando nao le o proprio perfil, a leitura volta vazia e a tela
+     voltava para "ainda nao esta no painel", como se nada tivesse acontecido.
+     O sql/002_perfil_proprio.sql acrescenta a leitura do proprio perfil; e,
+     para funcionar mesmo antes de rodar o 002, o botao de entrar na equipe
+     usa o perfil que a propria obras_registrar devolve. */
+  function tratarPerfil(p) {
+    if (!p) { semAcesso('Sua conta ainda não está no painel', 'Este login existe (é o mesmo da Central e do CRM), mas não está na equipe do painel de obras. Diga o seu nome e o seu papel para entrar. O primeiro cadastro vira gestor; os seguintes entram depois que um gestor liberar.', true); return; }
+    if (!p.ativo && !p.aprovado_em) { semAcesso('Cadastro recebido', 'Seu cadastro como ' + (NOMES.papel[p.papel] || p.papel).toLowerCase() + ' está aguardando a liberação de um gestor da DPR. Quando liberar, é só entrar de novo.'); return; }
+    if (!p.ativo) { semAcesso('Sua conta foi desativada', 'Esta conta foi desativada no painel. Fale com um gestor da DPR.'); return; }
+    estado.perfil = p;
+    entrarNoApp();
   }
   function entrarNoApp() {
     var p = estado.perfil;

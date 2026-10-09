@@ -574,6 +574,15 @@ create policy obras_perfis_le_equipe on public.obras_perfis
   for select to authenticated
   using (public.obras_tem_acesso());
 
+-- cada pessoa le o PROPRIO perfil mesmo inativo ou aguardando liberacao
+-- (09/10/2026): sem isto, quem acabou de pedir acesso nao enxergava o
+-- proprio cadastro e a tela voltava para "ainda nao esta no painel". Quem ja
+-- rodou o 001 antes desta linha roda o sql/002_perfil_proprio.sql.
+drop policy if exists obras_perfis_le_o_proprio on public.obras_perfis;
+create policy obras_perfis_le_o_proprio on public.obras_perfis
+  for select to authenticated
+  using (user_id = auth.uid());
+
 drop policy if exists obras_perfis_edita_o_proprio on public.obras_perfis;
 create policy obras_perfis_edita_o_proprio on public.obras_perfis
   for update to authenticated

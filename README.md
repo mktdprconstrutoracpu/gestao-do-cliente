@@ -100,7 +100,12 @@ Supabase > SQL Editor > New query > colar `sql/001_obras.sql` inteiro > Run.
 Pode rodar mais de uma vez. Tudo comeca com `obras_`; nada da Central nem do
 CRM e tocado. O arquivo tambem cria o bucket `obras` no Storage, para as fotos.
 
-O primeiro gestor e **quem criar a primeira conta** na tela "Criar conta". Se
+Quem ja tinha rodado o 001 antes de 09/10/2026 roda tambem o
+`sql/002_perfil_proprio.sql` (a trava que deixa cada pessoa ler o proprio
+perfil enquanto aguarda liberacao; o 001 atual ja a traz).
+
+O primeiro gestor e **quem criar a primeira conta** na tela "Criar conta", ou
+quem primeiro tocar em "Entrar na equipe do painel" na tela sem acesso. Se
 precisar promover alguem a gestor por fora (socorro), no SQL Editor:
 `select public.obras_promover_gestor('email@da.pessoa');`
 
@@ -136,6 +141,9 @@ ela e feita para o navegador e, sem login, nao abre nada.
   uma foto existente apaga o arquivo do Storage e a linha. O bucket e
   publico para leitura: a foto aprovada aparece na Central pelo endereco
   direto.
+- `sql/002_perfil_proprio.sql`: a trava que deixa cada pessoa ler o proprio
+  perfil mesmo aguardando liberacao (so para quem rodou o 001 antes de
+  09/10/2026; o 001 atual ja a traz).
 - `sql/001_obras.sql`:
   - `obras_perfis` (papel gestor, aprovador, obra; ativo; aprovado_em),
     funcoes `obras_papel()`, `obras_tem_acesso()`, `obras_e_gestor()`,
