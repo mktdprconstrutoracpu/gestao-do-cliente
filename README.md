@@ -109,6 +109,16 @@ quem primeiro tocar em "Entrar na equipe do painel" na tela sem acesso. Se
 precisar promover alguem a gestor por fora (socorro), no SQL Editor:
 `select public.obras_promover_gestor('email@da.pessoa');`
 
+**Liberar escrevendo "liberado" (sem SQL):** rode uma vez o
+`sql/003_liberacoes.sql`. Ele cria a tabela `obras_liberacoes`, com uma linha
+para cada login do Supabase (os que ja existem e os que forem criados). Em
+Supabase > Table Editor > `obras_liberacoes`, escreva `liberado` na coluna
+`liberado` da pessoa (e escolha o `papel`: gestor, aprovador ou obra) e ela
+entra no painel na hora; apague a palavra, ou escreva `nao`, e ela perde o
+acesso. A coluna `resultado` mostra o que o banco fez. A tabela se mantem em
+dia sozinha: quem pede entrada pelo painel aparece como "pediu entrada", e
+quem um gestor aprova na aba Equipe aparece como liberado.
+
 ### 2. Supabase > Authentication > URL Configuration
 
 Em **Redirect URLs**, adicione o endereco do painel (o da Vercel e, depois, o
@@ -144,6 +154,17 @@ ela e feita para o navegador e, sem login, nao abre nada.
 - `sql/002_perfil_proprio.sql`: a trava que deixa cada pessoa ler o proprio
   perfil mesmo aguardando liberacao (so para quem rodou o 001 antes de
   09/10/2026; o 001 atual ja a traz).
+- `sql/003_liberacoes.sql`: a tabela `obras_liberacoes` (email, nome, papel,
+  liberado, resultado), um controle remoto de `obras_perfis` para liberar
+  pelo Table Editor. Gatilhos: escrever na tabela aplica em `obras_perfis`
+  (cria ou reativa o perfil com o papel escolhido; sem a palavra, desativa);
+  apagar a linha desativa; toda mudanca em `obras_perfis` (aba Equipe,
+  `obras_registrar`, `obras_promover_gestor`) e espelhada de volta; todo
+  login novo em `auth.users` ganha uma linha e o login apagado perde a dele.
+  Os gatilhos se reconhecem por `pg_trigger_depth()` para nao entrar em
+  circulo. RLS ligado sem politica: o navegador nao le nem escreve. Teste
+  em `scratchpad/obras_sql_testar.cjs` (pglite, Postgres embutido em Node,
+  com um `auth.users` de mentira; 36 cenarios).
 - `sql/001_obras.sql`:
   - `obras_perfis` (papel gestor, aprovador, obra; ativo; aprovado_em),
     funcoes `obras_papel()`, `obras_tem_acesso()`, `obras_e_gestor()`,
