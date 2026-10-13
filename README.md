@@ -165,6 +165,15 @@ ela e feita para o navegador e, sem login, nao abre nada.
   circulo. RLS ligado sem politica: o navegador nao le nem escreve. Teste
   em `scratchpad/obras_sql_testar.cjs` (pglite, Postgres embutido em Node,
   com um `auth.users` de mentira; 36 cenarios).
+- `sql/004_cliente_ve_a_obra.sql` (13/10/2026, "a Central vai aparecer de um
+  empreendimento so, entao tudo que entrar na gestao de obra pode ir pra
+  Central"): `obras_cliente_do_empreendimento` deixa de exigir que o nome do
+  empreendimento bata com o da casa do cliente; todo cliente com vinculo
+  aprovado le os empreendimentos em acompanhamento e as atualizacoes
+  APROVADAS deles. A Central escolhe o de nome igual; sem ele, o unico que
+  existir; com dois ou mais e nenhum nome igual, mostra a demonstracao. O
+  motivo: o painel estava com "Villagio Caucaia 2" e a Central com
+  "VILLAGIO CAUCAIA II". Precisa ser rodado no SQL Editor.
 - `sql/001_obras.sql`:
   - `obras_perfis` (papel gestor, aprovador, obra; ativo; aprovado_em),
     funcoes `obras_papel()`, `obras_tem_acesso()`, `obras_e_gestor()`,
