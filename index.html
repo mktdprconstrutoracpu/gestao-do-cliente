@@ -6,7 +6,7 @@
 <title>Gestão do Cliente DPR</title>
 <meta name="description" content="Painel de obras da DPR Construtora: a obra envia a atualização, o aprovador libera, o cliente vê na Central.">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#2d2d2d">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23d32f2f'/%3E%3Ctext x='16' y='21' font-family='Arial' font-weight='700' font-size='13' text-anchor='middle' fill='%23fff'%3EDPR%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,30 +33,42 @@
      (ve tudo e decide), obra (envia e ve so o que enviou).
      =========================================================================== -->
 <style>
+  /* NOVO VISUAL (20/11/2026, "claro de canteiro", escolha dela): fundo cinza-concreto claro,
+     cartoes brancos e o vermelho da DPR so nas acoes principais. Legivel no sol da obra, e as
+     fotos ganham destaque. Os nomes das variaveis continuam os mesmos (o resto do CSS usa). */
   :root {
-    --primario: #2d2d2d;
-    --secundario: #3a3a3a;
+    --primario: #1e1c1a;
+    --secundario: #3a3633;
     --vermelho: #d32f2f;
-    --vermelho-escuro: #b71c1c;
-    --fundo: #f4f4f6;
+    --vermelho-escuro: #b3261e;
+    --vermelho-claro: #fbeae8;
+    --fundo: #f1efeb;
+    --fundo-2: #e8e5df;
     --cartao: #ffffff;
-    --texto: #2b2b2e;
-    --texto-fraco: #6f6f78;
-    --linha: #e3e3e8;
+    --texto: #1e1c1a;
+    --texto-fraco: #6b6660;
+    --linha: #e3dfd8;
+    --linha-forte: #d2ccc2;
     --verde: #2e7d32;
-    --ambar: #ef6c00;
-    --azul: #1565c0;
-    --cinza: #8a8a94;
+    --verde-claro: #e7f3e8;
+    --ambar: #b85c00;
+    --ambar-claro: #fdf0e1;
+    --azul: #1f5faf;
+    --azul-claro: #e6eef9;
+    --cinza: #857f77;
+    --cinza-claro: #eeece8;
     --titulo: 'Montserrat', 'Segoe UI', sans-serif;
     --texto-fonte: 'Inter', 'Segoe UI', sans-serif;
-    --raio: 10px;
-    --sombra: 0 1px 2px rgba(20, 20, 30, 0.06), 0 6px 20px rgba(20, 20, 30, 0.06);
+    --raio: 14px;
+    --sombra: 0 1px 2px rgba(30, 28, 26, 0.05), 0 8px 24px rgba(30, 28, 26, 0.06);
+    --sombra-forte: 0 24px 60px rgba(30, 28, 26, 0.16);
+    --menu-baixo: 0px;
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--fundo); color: var(--texto); font-family: var(--texto-fonte); font-size: 15px; line-height: 1.5; min-height: 100vh; }
-  h1, h2, h3 { margin: 0; font-family: var(--titulo); font-weight: 700; letter-spacing: -0.01em; }
-  h1 { font-size: 22px; }
+  h1, h2, h3 { margin: 0; font-family: var(--titulo); font-weight: 700; letter-spacing: -0.015em; text-wrap: balance; }
+  h1 { font-size: 26px; line-height: 1.15; }
   h2 { font-size: 18px; }
   p { margin: 0; }
   a { color: var(--vermelho); }
@@ -66,10 +78,11 @@
   .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
 
   /* ---- botoes ---- */
-  .botao { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--linha); background: var(--cartao); color: var(--texto); font-weight: 600; cursor: pointer; text-decoration: none; transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s; white-space: nowrap; }
-  .botao:hover { border-color: #c9c9d1; background: #fafafb; }
+  .botao { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 9px 18px; border-radius: 10px; border: 1px solid var(--linha); background: var(--cartao); color: var(--texto); font-weight: 600; cursor: pointer; text-decoration: none; transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s; white-space: nowrap; }
+  .botao svg { width: 18px; height: 18px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .botao:hover { border-color: var(--linha-forte); background: #fbfaf8; }
   .botao:focus-visible { outline: 2px solid var(--vermelho); outline-offset: 2px; }
-  .botao--cheio { background: var(--vermelho); border-color: var(--vermelho); color: #fff; }
+  .botao--cheio { background: var(--vermelho); border-color: var(--vermelho); color: #fff; box-shadow: 0 6px 16px rgba(211, 47, 47, 0.22); }
   .botao--cheio:hover { background: var(--vermelho-escuro); border-color: var(--vermelho-escuro); }
   .botao--verde { background: var(--verde); border-color: var(--verde); color: #fff; }
   .botao--verde:hover { background: #1b5e20; border-color: #1b5e20; }
@@ -91,65 +104,69 @@
   .erro:empty { display: none; }
 
   /* ---- telas de entrada ---- */
-  .entrada { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: linear-gradient(160deg, #1f1f22 0%, #2d2d2d 55%, #3a3a3a 100%); }
-  .entrada-caixa { width: min(440px, 100%); background: var(--cartao); border-radius: 14px; padding: 32px 28px 28px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35); display: grid; gap: 18px; }
-  .marca { display: inline-flex; align-items: center; gap: 10px; font-family: var(--titulo); font-weight: 800; font-size: 18px; color: var(--primario); text-decoration: none; white-space: nowrap; }
-  .marca i { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 8px; background: var(--vermelho); color: #fff; font-style: normal; font-size: 11px; letter-spacing: 0.04em; flex: 0 0 auto; }
-  .entrada-caixa h1 { font-size: 20px; }
-  .entrada-caixa p { color: var(--texto-fraco); font-size: 14px; }
+  /* as telas de entrada: o papel quadriculado de planta da obra, com a faixa vermelha da DPR no alto */
+  .entrada { min-height: 100vh; display: grid; place-items: center; padding: 28px 18px; background-color: var(--fundo); background-image: linear-gradient(rgba(30, 28, 26, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(30, 28, 26, 0.05) 1px, transparent 1px); background-size: 28px 28px; border-top: 5px solid var(--vermelho); }
+  .entrada-caixa { width: min(500px, 100%); background: var(--cartao); border: 1px solid var(--linha); border-radius: 20px; padding: clamp(24px, 5vw, 36px); box-shadow: var(--sombra-forte); display: grid; gap: 20px; }
+  .marca { display: inline-flex; align-items: center; gap: 10px; font-family: var(--titulo); font-weight: 800; font-size: 17px; color: var(--primario); text-decoration: none; white-space: nowrap; letter-spacing: -0.01em; }
+  .marca i { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; background: var(--vermelho); color: #fff; font-style: normal; font-size: 11px; letter-spacing: 0.04em; flex: 0 0 auto; }
+  .entrada-caixa h1 { font-size: 24px; }
+  .entrada-caixa h1 + p { margin-top: 6px; }
+  .entrada-caixa p { color: var(--texto-fraco); font-size: 14.5px; }
   .entrada-caixa form { display: grid; gap: 14px; }
-  .entrada-caixa .botao { min-height: 46px; }
-  .entrada-caixa .pe { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
-  /* as duas opcoes da tela inicial */
+  .entrada-caixa .botao { min-height: 48px; }
+  .entrada-caixa .pe { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; font-size: 13.5px; padding-top: 4px; border-top: 1px solid var(--linha); }
+  /* as duas opcoes da tela inicial: icone, nome, o que se faz ali e a seta */
   .escolhas { display: grid; gap: 12px; }
-  .escolha { display: grid; gap: 4px; text-align: left; padding: 16px 18px; min-height: 44px; border: 1px solid var(--linha); border-radius: 12px; background: #fff; cursor: pointer; font: inherit; color: inherit; transition: border-color 0.15s, box-shadow 0.15s; }
-  .escolha b { font-family: var(--titulo); font-size: 18px; }
-  .escolha span { font-size: 14px; color: var(--texto-fraco); }
-  .escolha:hover, .escolha:focus-visible { border-color: var(--vermelho); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12); outline: none; }
+  .escolha { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px 16px; text-align: left; padding: 18px; min-height: 44px; border: 1px solid var(--linha); border-radius: 14px; background: #fff; cursor: pointer; font: inherit; color: inherit; transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; }
+  .escolha .escolha-icone { grid-row: span 2; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: var(--vermelho-claro); color: var(--vermelho); }
+  .escolha .escolha-icone svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .escolha b { font-family: var(--titulo); font-size: 18px; align-self: end; }
+  .escolha span:not(.escolha-icone):not(.escolha-seta) { font-size: 14px; color: var(--texto-fraco); grid-column: 2; align-self: start; }
+  .escolha .escolha-seta { grid-column: 3; grid-row: 1 / span 2; color: var(--texto-fraco); transition: transform 0.15s, color 0.15s; }
+  .escolha .escolha-seta svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
+  .escolha:hover, .escolha:focus-visible { border-color: var(--vermelho); box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.1); outline: none; }
+  .escolha:hover .escolha-seta, .escolha:focus-visible .escolha-seta { color: var(--vermelho); transform: translateX(3px); }
   .entrada-caixa .pe button { background: none; border: 0; min-height: 44px; padding: 10px 0; color: var(--vermelho); font-weight: 600; cursor: pointer; }
-  .carregando { min-height: 100vh; display: grid; place-items: center; color: var(--texto-fraco); font-weight: 600; }
+  .carregando { min-height: 100vh; display: grid; place-items: center; color: var(--texto-fraco); font-weight: 600; background: var(--fundo); }
 
   /* ---- o painel ---- */
-  .topo { position: sticky; top: 0; z-index: 50; background: var(--primario); color: #fff; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); }
-  .topo-dentro { display: flex; align-items: center; gap: 18px; padding: 0 clamp(14px, 3vw, 32px); min-height: 60px; }
-  .topo .marca { color: #fff; font-size: 16px; }
-  /* as abas: as duas principais (Enviar, Aprovar) e as duas do gestor */
-  .topo nav { display: flex; gap: 4px; margin-left: 8px; overflow-x: auto; scrollbar-width: none; }
+  /* o topo: branco, a marca, as abas sublinhadas e quem esta logado (avatar com as iniciais) */
+  /* sem backdrop-filter: ele faria do topo o bloco de referencia do menu fixo de baixo (celular) */
+  .topo { position: sticky; top: 0; z-index: 50; background: #fff; color: var(--texto); border-bottom: 1px solid var(--linha); }
+  .topo-dentro { display: flex; align-items: center; gap: 22px; padding: 0 clamp(14px, 3vw, 32px); min-height: 64px; max-width: 1380px; margin: 0 auto; }
+  .topo .marca { font-size: 16px; }
+  /* as abas: as duas principais (Gestao de obras, Aprovacao) e as duas do gestor */
+  .topo nav { display: flex; gap: 2px; align-self: stretch; overflow-x: auto; scrollbar-width: none; }
   .topo nav::-webkit-scrollbar { display: none; }
-  .topo nav a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; color: rgba(255, 255, 255, 0.78); text-decoration: none; font-weight: 600; font-size: 14px; white-space: nowrap; }
-  .topo nav a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
-  .topo nav a.ativo { background: var(--vermelho); color: #fff; }
+  .topo nav a { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 64px; padding: 0 14px; color: var(--texto-fraco); text-decoration: none; font-weight: 600; font-size: 14.5px; white-space: nowrap; transition: color 0.15s; }
+  .topo nav a svg { width: 19px; height: 19px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .topo nav a::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--vermelho); transform: scaleX(0); transition: transform 0.2s; }
+  .topo nav a:hover { color: var(--texto); }
+  .topo nav a.ativo { color: var(--texto); }
+  .topo nav a.ativo svg { color: var(--vermelho); }
+  .topo nav a.ativo::after { transform: scaleX(1); }
+  .topo nav a:focus-visible { outline: 2px solid var(--vermelho); outline-offset: -6px; border-radius: 10px; }
   .topo-usuario { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-  .topo-usuario .quem { text-align: right; line-height: 1.2; }
+  .avatar { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--fundo-2); color: var(--texto); font-family: var(--titulo); font-weight: 700; font-size: 13px; letter-spacing: 0.02em; flex: 0 0 auto; }
+  .topo-usuario .quem { line-height: 1.2; }
   .topo-usuario .quem b { display: block; font-size: 14px; }
-  .topo-usuario .quem span { font-size: 12px; color: rgba(255, 255, 255, 0.65); }
-  .topo-usuario .botao { min-height: 36px; padding: 5px 12px; font-size: 13px; background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.25); }
-  .topo-usuario .botao:hover { background: rgba(255, 255, 255, 0.1); }
-  main { padding: clamp(18px, 3vw, 32px); max-width: 1320px; margin: 0 auto; }
-  .painel { display: grid; gap: 18px; }
-  .cabeca { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
-  .cabeca p { color: var(--texto-fraco); font-size: 14px; }
+  .topo-usuario .quem span { font-size: 12px; color: var(--texto-fraco); }
+  .topo-usuario .botao { min-height: 38px; padding: 5px 12px; font-size: 13px; }
+  main { padding: clamp(20px, 3.4vw, 40px) clamp(14px, 3vw, 32px); padding-bottom: calc(clamp(20px, 3.4vw, 40px) + var(--menu-baixo)); max-width: 1380px; margin: 0 auto; }
+  .painel { display: grid; gap: 20px; }
+  .cabeca { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 20px; }
+  .cabeca h1 + p { margin-top: 6px; }
+  .cabeca p { color: var(--texto-fraco); font-size: 14.5px; max-width: 70ch; }
   .acoes { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: var(--raio); box-shadow: var(--sombra); }
-
-  /* os numeros no alto de cada aba */
-  .resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
-  .resumo .cartao { padding: 16px 18px; display: grid; gap: 4px; }
-  .resumo .num { font-family: var(--titulo); font-weight: 800; font-size: 30px; line-height: 1; }
-  .resumo .rot { font-size: 13px; color: var(--texto-fraco); font-weight: 600; }
-  .resumo .cartao[data-cor="verde"] .num { color: var(--verde); }
-  .resumo .cartao[data-cor="ambar"] .num { color: var(--ambar); }
-  .resumo .cartao[data-cor="vermelho"] .num { color: var(--vermelho); }
-  .resumo .cartao[data-cor="azul"] .num { color: var(--azul); }
-  .resumo .cartao[data-cor="cinza"] .num { color: var(--cinza); }
 
   /* tabelas */
   .tabela-caixa { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--linha); vertical-align: middle; }
-  th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-fraco); font-weight: 700; background: #fafafb; white-space: nowrap; }
+  th { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--texto-fraco); font-weight: 700; background: #faf9f7; white-space: nowrap; }
   tbody tr:last-child td { border-bottom: 0; }
-  tbody tr:hover { background: #fcfcfd; }
+  tbody tr:hover { background: #fbfaf8; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   td.inteiro { white-space: nowrap; }
   td .acoes { gap: 6px; }
@@ -164,17 +181,107 @@
   /* etiquetas de situacao */
   .etiqueta { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; background: #eee; color: var(--texto); }
   .etiqueta::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-  .etiqueta[data-status="aprovada"], .etiqueta[data-status="ativo"], .etiqueta[data-status="concluida"] { background: #e8f5e9; color: var(--verde); }
-  .etiqueta[data-status="aguardando"], .etiqueta[data-status="em_andamento"] { background: #fff3e0; color: var(--ambar); }
-  .etiqueta[data-status="ajuste"] { background: #e3f2fd; color: var(--azul); }
-  .etiqueta[data-status="recusada"], .etiqueta[data-status="inativo"], .etiqueta[data-status="a_fazer"] { background: #eceff1; color: var(--cinza); }
-  .etiqueta[data-status="gestor"] { background: #fdecea; color: var(--vermelho); }
-  .etiqueta[data-status="aprovador"] { background: #e3f2fd; color: var(--azul); }
-  .etiqueta[data-status="obra"] { background: #f1f1f4; color: var(--texto); }
+  .etiqueta[data-status="aprovada"], .etiqueta[data-status="ativo"], .etiqueta[data-status="concluida"] { background: var(--verde-claro); color: var(--verde); }
+  .etiqueta[data-status="aguardando"], .etiqueta[data-status="em_andamento"] { background: var(--ambar-claro); color: var(--ambar); }
+  .etiqueta[data-status="ajuste"] { background: var(--azul-claro); color: var(--azul); }
+  .etiqueta[data-status="recusada"], .etiqueta[data-status="inativo"], .etiqueta[data-status="a_fazer"] { background: var(--cinza-claro); color: var(--cinza); }
+  .etiqueta[data-status="gestor"] { background: var(--vermelho-claro); color: var(--vermelho); }
+  .etiqueta[data-status="aprovador"] { background: var(--azul-claro); color: var(--azul); }
+  .etiqueta[data-status="obra"] { background: var(--cinza-claro); color: var(--texto); }
   .alerta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 14px 18px; border-left: 5px solid var(--ambar); font-size: 14px; }
   .alerta b { color: var(--ambar); }
   .alerta--info { border-left-color: var(--azul); }
   .alerta--info b { color: var(--azul); }
+
+  /* (20/11/2026) os cartoes das obras: andamento, etapas em segmentos e o envio do mes */
+  .obras-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 16px; }
+  .obra { padding: 20px 22px; display: grid; gap: 12px; align-content: start; }
+  .obra-cabeca { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+  .obra-cabeca h3 { font-size: 17px; line-height: 1.2; }
+  .obra-cabeca span { display: block; margin-top: 4px; font-size: 13px; color: var(--texto-fraco); }
+  .obra-pct { font-family: var(--titulo); font-weight: 800; font-size: 30px; line-height: 1; color: var(--texto); font-variant-numeric: tabular-nums; }
+  .obra-barra { height: 10px; border-radius: 999px; background: var(--fundo-2); overflow: hidden; }
+  .obra-barra i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--vermelho-escuro), var(--vermelho)); transition: width 0.6s ease; }
+  .obra-legenda { font-size: 12.5px; color: var(--texto-fraco); margin-top: -4px; }
+  .obra-etapas { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
+  .obra-etapas li { height: 6px; border-radius: 3px; background: var(--fundo-2); }
+  .obra-etapas li[data-situacao="concluida"] { background: var(--verde); }
+  .obra-etapas li[data-situacao="em_andamento"] { background: var(--ambar); }
+  .obra-etapa { font-size: 13.5px; color: var(--texto-fraco); }
+  .obra-etapa b { color: var(--texto); font-weight: 600; }
+  .obra-mes { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-top: 14px; margin-top: 2px; border-top: 1px solid var(--linha); font-size: 14px; color: var(--texto-fraco); }
+  .obra-mes > span { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .obra-enviar { width: 100%; min-height: 50px; font-size: 15.5px; }
+
+  /* Empreendimentos: o mesmo cartao das obras, com as datas; o encerrado fica apagado */
+  .emp-cartao.encerrado { opacity: 0.72; }
+  .emp-cartao .obra-cabeca .etiqueta { flex: 0 0 auto; }
+  .emp-datas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 2px 0 0; padding: 12px 0; border-top: 1px solid var(--linha); border-bottom: 1px solid var(--linha); }
+  .emp-datas div { display: grid; gap: 2px; }
+  .emp-datas dt { font-size: 11.5px; font-weight: 600; color: var(--texto-fraco); }
+  .emp-datas dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* Equipe: uma linha-cartao por pessoa */
+  .pessoas { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .pessoa { display: grid; grid-template-columns: auto minmax(0, 1.4fr) minmax(0, 0.8fr) 190px minmax(0, 1fr); align-items: center; gap: 12px 18px; padding: 12px 18px; }
+  .pessoa.esperando { border-left: 4px solid var(--ambar); background: #fffaf3; }
+  .pessoa.inativa { opacity: 0.65; }
+  .pessoa-quem { display: grid; gap: 1px; min-width: 0; }
+  .pessoa-quem b { font-size: 15px; }
+  .pessoa-quem b small { font-weight: 500; color: var(--texto-fraco); }
+  .pessoa-quem > span { font-size: 13px; color: var(--texto-fraco); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pessoa-acoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  .pessoa .papel-sel { width: 100%; }
+
+  /* "Seus envios": o titulo com os numeros numa linha so */
+  .secao-cabeca { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 18px; margin-top: 8px; }
+  .secao-cabeca h2 { font-size: 19px; }
+  .resumo-linha { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13.5px; color: var(--texto-fraco); }
+  .resumo-linha .num { font-family: var(--titulo); font-weight: 800; font-size: 15px; color: var(--texto); margin-right: 2px; }
+  .resumo-linha [data-cor="ambar"] .num { color: var(--ambar); }
+  .resumo-linha [data-cor="verde"] .num { color: var(--verde); }
+
+  /* a Aprovacao: os numeros sao o filtro (o marcado fica escuro) */
+  .filtros { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+  .filtro { display: grid; gap: 4px; justify-items: start; padding: 16px 18px; min-height: 44px; text-align: left; font: inherit; color: var(--texto-fraco); background: var(--cartao); border: 1px solid var(--linha); border-radius: var(--raio); box-shadow: var(--sombra); cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s; }
+  .filtro .num { font-family: var(--titulo); font-weight: 800; font-size: 30px; line-height: 1; color: var(--texto); font-variant-numeric: tabular-nums; }
+  .filtro span { font-size: 13.5px; font-weight: 600; }
+  .filtro[data-cor="aguardando"] .num { color: var(--ambar); }
+  .filtro[data-cor="ajuste"] .num { color: var(--azul); }
+  .filtro[data-cor="aprovada"] .num { color: var(--verde); }
+  .filtro[data-cor="recusada"] .num { color: var(--cinza); }
+  .filtro:hover { border-color: var(--linha-forte); }
+  .filtro:focus-visible { outline: 2px solid var(--vermelho); outline-offset: 2px; }
+  .filtro[aria-pressed="true"] { background: var(--texto); border-color: var(--texto); color: rgba(255, 255, 255, 0.78); }
+  .filtro[aria-pressed="true"] .num { color: #fff; }
+  /* na fila, o que espera decisao ganha a faixa ambar; o Decidir e o convite principal */
+  .envio[data-situacao="aguardando"] { border-left: 4px solid var(--ambar); }
+  .envio-lado .botao--pequeno { pointer-events: none; }
+  .envio[data-situacao="aguardando"] .envio-lado .botao--pequeno { background: var(--vermelho); border-color: var(--vermelho); color: #fff; }
+
+  /* os cartoes de envio, agrupados por mes */
+  .envios { display: grid; gap: 6px; }
+  h3.grupo-mes { font-family: var(--texto-fonte); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--texto-fraco); margin: 12px 0 4px; }
+  h3.grupo-mes:first-child { margin-top: 0; }
+  .envios-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .envio { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 12px 16px 12px 12px; text-align: left; font: inherit; color: inherit; background: var(--cartao); border: 1px solid var(--linha); border-radius: var(--raio); box-shadow: var(--sombra); cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; }
+  .envio:hover { border-color: var(--linha-forte); box-shadow: 0 2px 4px rgba(30, 28, 26, 0.05), 0 12px 28px rgba(30, 28, 26, 0.09); }
+  .envio:focus-visible { outline: 2px solid var(--vermelho); outline-offset: 2px; }
+  .envio[data-situacao="ajuste"] { border-left: 4px solid var(--azul); }
+  .envio-foto { position: relative; display: grid; place-items: center; width: 84px; height: 84px; border-radius: 10px; overflow: hidden; background: var(--fundo-2); color: var(--cinza); flex: 0 0 auto; }
+  .envio-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .envio-foto svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .envio-conta { position: absolute; right: 5px; bottom: 5px; min-width: 22px; padding: 1px 6px; border-radius: 999px; background: rgba(30, 28, 26, 0.78); color: #fff; font-size: 11.5px; font-weight: 700; text-align: center; }
+  .envio-corpo { display: grid; gap: 3px; min-width: 0; }
+  .envio-titulo { font-weight: 700; font-size: 15.5px; line-height: 1.3; }
+  .envio-meta { font-size: 13px; color: var(--texto-fraco); }
+  .envio-meta b { color: var(--texto); font-weight: 600; }
+  .envio-obs { margin-top: 4px; padding: 6px 10px; border-radius: 8px; background: var(--azul-claro); color: var(--azul); font-size: 13px; font-weight: 600; }
+  .envio-obs[data-situacao="recusada"] { background: var(--cinza-claro); color: var(--cinza); }
+  .envio-lado { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  .envio-seta { color: var(--texto-fraco); }
+  .envio-seta svg { width: 20px; height: 20px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .vazio.cartao { display: grid; gap: 4px; }
 
   /* linhas clicaveis */
   tbody tr[data-id] { cursor: pointer; }
@@ -232,6 +339,37 @@
   dialog .pe { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 6px; }
   dialog .pe .apagar { margin-right: auto; color: var(--vermelho); }
 
+  /* (20/11/2026) a ficha: titulo fixo no alto ao rolar, fotos maiores, area de adicionar e o visor */
+  .dlg-ficha { width: min(1080px, calc(100vw - 32px)); }
+  .dlg-ficha form > h2 { position: sticky; top: 0; z-index: 4; margin: -24px -24px 0; padding: 18px 24px; background: #fff; border-bottom: 1px solid var(--linha); }
+  .fotos-grade { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
+  .foto { border-radius: 10px; }
+  .foto a { cursor: zoom-in; }
+  .foto img { transition: transform 0.3s; }
+  .foto a:hover img { transform: scale(1.04); }
+  .fotos-grade--ver .foto:first-child { grid-column: span 2; grid-row: span 2; }
+  .foto-adicionar { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 72px; padding: 14px 18px; text-align: left; font: inherit; color: var(--texto); background: #fbfaf8; border: 2px dashed var(--linha-forte); border-radius: 12px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .foto-adicionar svg { width: 30px; height: 30px; flex: 0 0 auto; fill: none; stroke: var(--vermelho); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .foto-adicionar span { display: grid; gap: 2px; }
+  .foto-adicionar small { color: var(--texto-fraco); font-size: 12.5px; }
+  .foto-adicionar:hover, .foto-adicionar:focus-visible, .soltando .foto-adicionar { border-color: var(--vermelho); background: var(--vermelho-claro); outline: none; }
+  .foto-adicionar[disabled] { opacity: 0.5; cursor: default; }
+  .soltando form { outline: 3px dashed var(--vermelho); outline-offset: -10px; }
+  .visor { width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; padding: 0; border-radius: 0; background: rgba(15, 14, 13, 0.94); color: #fff; overflow: hidden; }
+  .visor[open] { display: grid; place-items: center; }
+  .visor::backdrop { background: rgba(15, 14, 13, 0.6); }
+  .visor img { max-width: calc(100vw - 140px); max-height: calc(100vh - 110px); object-fit: contain; border-radius: 8px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); }
+  .visor-fechar, .visor-seta { position: absolute; display: grid; place-items: center; width: 48px; height: 48px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.12); color: #fff; cursor: pointer; font-size: 26px; line-height: 1; transition: background 0.15s; }
+  .visor-fechar:hover, .visor-seta:hover { background: rgba(255, 255, 255, 0.24); }
+  .visor-fechar:focus-visible, .visor-seta:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .visor-fechar { top: 16px; right: 16px; }
+  .visor-seta { top: 50%; transform: translateY(-50%); }
+  .visor-seta.ant { left: 16px; }
+  .visor-seta.prox { right: 16px; }
+  .visor-seta svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .visor.uma-so .visor-seta { display: none; }
+  .visor-conta { position: absolute; bottom: 18px; left: 0; right: 0; text-align: center; font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.8); }
+
   /* aviso (toast) */
   .aviso { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); z-index: 100; max-width: min(520px, calc(100vw - 32px)); padding: 12px 18px; border-radius: 10px; background: var(--primario); color: #fff; font-weight: 600; font-size: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; }
   .aviso.visivel { opacity: 1; transform: translate(-50%, 0); }
@@ -240,9 +378,52 @@
 
   @media (max-width: 760px) {
     .campos-2 { grid-template-columns: 1fr; }
-    .topo-dentro { flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; gap: 8px 14px; }
-    .topo nav { order: 3; width: 100%; margin-left: 0; }
-    .topo-usuario .quem span { display: none; }
+    /* (20/11/2026) no celular o topo e so a marca e quem esta logado; as abas vao para um menu
+       fixo embaixo, como num aplicativo (com uma aba so, a da obra, o menu nem aparece) */
+    .topo-dentro { min-height: 58px; gap: 10px; }
+    .topo .marca { font-size: 15px; }
+    .topo-usuario .quem { display: none; }
+    body:has(#menu[data-abas]:not([data-abas="1"])) { --menu-baixo: calc(66px + env(safe-area-inset-bottom)); }
+    .topo nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0; background: #fff; border-top: 1px solid var(--linha); box-shadow: 0 -6px 20px rgba(30, 28, 26, 0.06); padding-bottom: env(safe-area-inset-bottom); overflow: visible; }
+    .topo nav[data-abas="1"] { display: none; }
+    .topo nav a { flex-direction: column; justify-content: center; gap: 3px; min-height: 66px; padding: 6px 4px; font-size: 11.5px; font-weight: 600; }
+    .topo nav a svg { width: 22px; height: 22px; }
+    .topo nav a::after { left: 30%; right: 30%; top: 0; bottom: auto; border-radius: 0 0 3px 3px; }
+    .topo nav a.ativo { color: var(--vermelho); }
+    .aviso { bottom: calc(18px + var(--menu-baixo)); }
+    /* os envios no celular: a foto menor, a situacao embaixo do texto, sem a seta */
+    .obra { padding: 18px; }
+    .envio { grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 10px 12px 12px 10px; }
+    .envio-foto { width: 72px; height: 72px; align-self: start; }
+    .envio-lado { grid-column: 2; flex-direction: row; align-items: center; justify-content: space-between; }
+    .envio-seta { display: none; }
+    /* a ficha no celular: tela cheia, Fechar/Enviar presos embaixo e, com decisao pendente, a barra
+       de Aprovar / Pedir ajuste / Recusar fixa no rodape (a ficha nao tem transform: o fixed e da tela) */
+    dialog.dlg-ficha { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; }
+    .dlg-ficha form { padding: 24px 16px; }
+    .dlg-ficha form > h2 { margin: -24px -16px 0; padding: 12px 16px; }
+    .dlg-ficha .ficha-campos > .pe { position: sticky; bottom: 0; z-index: 3; margin: 0 -16px -24px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid var(--linha); }
+    .dlg-ficha .ficha-campos > .pe .botao--cheio { flex: 1 1 auto; }
+    .dlg-ficha.com-decisao form { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+    .dlg-ficha.com-decisao .ficha-campos > .pe { position: static; margin: 0; padding: 0; border: 0; background: none; }
+    .dlg-ficha.com-decisao .decisao-botoes { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid var(--linha); box-shadow: 0 -8px 24px rgba(30, 28, 26, 0.1); }
+    .dlg-ficha.com-decisao .decisao-botoes .botao { padding: 9px 8px; }
+    .fotos-grade--ver { grid-template-columns: repeat(2, 1fr); }
+    .visor img { max-width: 100vw; max-height: calc(100vh - 140px); border-radius: 0; }
+    .visor-seta { top: auto; bottom: 8px; transform: none; }
+    /* a pessoa no celular: avatar e nome em cima; papel e situacao no meio; acoes embaixo */
+    .pessoa { grid-template-columns: auto minmax(0, 1fr); padding: 14px; }
+    .pessoa-papel, .pessoa-situacao, .pessoa-acoes { grid-column: 1 / -1; }
+    .pessoa-situacao { margin-top: -4px; }
+    .pessoa-acoes { justify-content: stretch; }
+    .pessoa-acoes .botao { flex: 1 1 0; }
+    .emp-datas { grid-template-columns: 1fr 1fr; }
+    /* os filtros no celular: tres em cima e dois embaixo, mais baixos */
+    .filtros { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+    .filtro { grid-column: span 2; padding: 12px; }
+    .filtro:nth-child(n+4) { grid-column: span 3; }
+    .filtro .num { font-size: 24px; }
+    .filtro span { font-size: 12.5px; }
     th, td { padding: 10px 10px; }
     /* no dedo, todo botao tem 44px, inclusive os pequenos das tabelas */
     .botao--pequeno, .topo-usuario .botao, .papel-sel { min-height: 44px; }
@@ -276,8 +457,8 @@
       <p>Escolha o painel. Depois é só entrar com o seu login.</p>
     </div>
     <div class="escolhas">
-      <button type="button" class="escolha" data-destino="enviar"><b>Gestão de obras</b><span>Enviar as fotos e o andamento da obra, mês a mês.</span></button>
-      <button type="button" class="escolha" data-destino="aprovar"><b>Aprovação</b><span>Aprovar o que a obra enviou antes de ir para a Central do Cliente.</span></button>
+      <button type="button" class="escolha" data-destino="enviar"><span class="escolha-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 18.5h20"/><path d="M4 18.5v-1.8a8 8 0 0 1 16 0v1.8"/><path d="M9.5 9.3V6h5v3.3"/><path d="M12 6v5.5"/></svg></span><b>Gestão de obras</b><span>Enviar as fotos e o andamento da obra, mês a mês.</span><span class="escolha-seta" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
+      <button type="button" class="escolha" data-destino="aprovar"><span class="escolha-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/><path d="M8.3 12.4l2.6 2.6 4.8-5"/></svg></span><b>Aprovação</b><span>Aprovar o que a obra enviou antes de ir para a Central do Cliente.</span><span class="escolha-seta" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
     </div>
   </div>
 </section>
@@ -390,12 +571,14 @@
       <a class="marca" href="#"><i>DPR</i>Gestão do Cliente</a>
       <nav aria-label="Abas do painel" id="menu">
         <!-- os nomes das duas abas sao os dela (09/10): "Gestão de obras" e "Aprovação"; as rotas continuam enviar e aprovar -->
-        <a href="#enviar" data-rota="enviar">Gestão de obras</a>
-        <a href="#aprovar" data-rota="aprovar" data-so="aprova">Aprovação</a>
-        <a href="#empreendimentos" data-rota="empreendimentos" data-so="gestor">Empreendimentos</a>
-        <a href="#equipe" data-rota="equipe" data-so="gestor">Equipe</a>
+        <!-- (20/11/2026) cada aba com o seu icone: no celular viram o menu fixo de baixo -->
+        <a href="#enviar" data-rota="enviar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 18.5h20"/><path d="M4 18.5v-1.8a8 8 0 0 1 16 0v1.8"/><path d="M9.5 9.3V6h5v3.3"/><path d="M12 6v5.5"/></svg>Gestão de obras</a>
+        <a href="#aprovar" data-rota="aprovar" data-so="aprova"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/><path d="M8.3 12.4l2.6 2.6 4.8-5"/></svg>Aprovação</a>
+        <a href="#empreendimentos" data-rota="empreendimentos" data-so="gestor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V6l8-3.5L20 6v15"/><path d="M2.5 21h19"/><path d="M9.5 21v-5h5v5"/><path d="M8.5 9.5h1M14.5 9.5h1M8.5 13h1M14.5 13h1"/></svg>Empreendimentos</a>
+        <a href="#equipe" data-rota="equipe" data-so="gestor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M2.5 21v-.5a6.5 6.5 0 0 1 13 0v.5"/><path d="M16 3.6a4 4 0 0 1 0 7.3"/><path d="M21.5 21v-.5a6.5 6.5 0 0 0-3.6-5.8"/></svg>Equipe</a>
       </nav>
       <div class="topo-usuario">
+        <span class="avatar" id="usuarioIniciais" aria-hidden="true"></span>
         <div class="quem"><b id="usuarioNome"></b><span id="usuarioPapel"></span></div>
         <button type="button" class="botao" id="sair">Sair</button>
       </div>
@@ -407,43 +590,28 @@
     <section class="painel" id="painelEnviar" data-painel="enviar" hidden>
       <div class="cabeca">
         <div><h1>Gestão de obras</h1><p id="enviarTexto">As fotos e o andamento da obra, mês a mês, para o cliente ver na Central depois de aprovado.</p></div>
-        <div class="acoes"><button type="button" class="botao botao--cheio" id="novaAtualizacao">Nova atualização</button></div>
+        <div class="acoes"><button type="button" class="botao botao--cheio" id="novaAtualizacao"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.6-2.5h6.8L17 8.5h3a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z"/><path d="M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg>Nova atualização</button></div>
       </div>
-      <div class="resumo" id="enviarResumo"></div>
-      <div class="cartao tabela-caixa">
-        <table id="tabelaMinhas">
-          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Mês</th><th>Fotos</th><th>Situação</th></tr></thead>
-          <tbody></tbody>
-        </table>
-        <div class="vazio" id="minhasVazio" hidden><b>Nenhuma atualização enviada ainda</b><span id="minhasVazioTexto">Toque em "Nova atualização". Ela aparece aqui com a situação: aguardando aprovação, aprovada, ajuste pedido ou recusada.</span></div>
+      <!-- (20/11/2026) um cartao por obra em acompanhamento: andamento, etapas e o envio do mes -->
+      <div class="obras-grade" id="enviarObras"></div>
+      <div class="secao-cabeca">
+        <h2>Seus envios</h2>
+        <div class="resumo-linha" id="enviarResumo"></div>
       </div>
+      <div id="listaMinhas" class="envios"></div>
+      <div class="cartao vazio" id="minhasVazio" hidden><b>Nenhuma atualização enviada ainda</b><span id="minhasVazioTexto">Toque em "Nova atualização". Ela aparece aqui com a situação: aguardando aprovação, aprovada, ajuste pedido ou recusada.</span></div>
     </section>
 
     <!-- Aba 2: Aprovar (Luana, Rodrigo, gestor) -->
     <section class="painel" id="painelAprovar" data-painel="aprovar" hidden>
       <div class="cabeca">
-        <div><h1>Aprovação</h1><p>Tudo o que a obra envia passa por aqui antes de chegar ao cliente. Nada é publicado sem alguém da DPR aprovar. Toque numa linha para abrir.</p></div>
-        <div class="acoes">
-          <div class="campo"><label class="sr" for="filaSituacao">Situação</label>
-            <select id="filaSituacao" class="papel-sel">
-              <option value="aguardando">Aguardando aprovação</option>
-              <option value="ajuste">Com ajuste pedido</option>
-              <option value="aprovada">Aprovadas</option>
-              <option value="recusada">Recusadas</option>
-              <option value="">Todas</option>
-            </select>
-          </div>
-        </div>
+        <div><h1>Aprovação</h1><p id="aprovarTexto">Tudo o que a obra envia passa por aqui antes de chegar ao cliente. Nada é publicado sem alguém da DPR aprovar.</p></div>
       </div>
       <div class="cartao alerta" id="aprovarAvisoEquipe" hidden></div>
-      <div class="resumo" id="aprovarResumo"></div>
-      <div class="cartao tabela-caixa">
-        <table id="tabelaFila">
-          <thead><tr><th>Empreendimento</th><th>Etapa</th><th>Título</th><th>Mês</th><th>Fotos</th><th>Enviado por</th><th>Quando</th><th>Situação</th><th></th></tr></thead>
-          <tbody></tbody>
-        </table>
-        <div class="vazio" id="filaVazio" hidden><b id="filaVazioTitulo">Nenhuma atualização aguardando</b><span id="filaVazioTexto">Quando alguém da obra enviar, aparece aqui para você aprovar, pedir ajuste ou recusar.</span></div>
-      </div>
+      <!-- (20/11/2026) os numeros sao o proprio filtro: tocar em "3 aguardando" mostra as 3 -->
+      <div class="filtros" id="aprovarResumo" role="group" aria-label="Mostrar por situação"></div>
+      <div id="listaFila" class="envios"></div>
+      <div class="cartao vazio" id="filaVazio" hidden><b id="filaVazioTitulo">Nenhuma atualização aguardando</b><span id="filaVazioTexto">Quando alguém da obra enviar, aparece aqui para você aprovar, pedir ajuste ou recusar.</span></div>
     </section>
 
     <!-- Gestor: Empreendimentos -->
@@ -452,13 +620,9 @@
         <div><h1>Empreendimentos</h1><p>As obras acompanhadas. Use o mesmo nome que está na Central do Cliente: é por ele que o cliente vê a obra da casa dele.</p></div>
         <div class="acoes"><button type="button" class="botao botao--cheio" id="novoEmpreendimento">Novo empreendimento</button></div>
       </div>
-      <div class="cartao tabela-caixa">
-        <table id="tabelaEmpreendimentos">
-          <thead><tr><th>Nome</th><th>Cidade</th><th>Início da obra</th><th>Previsão de entrega</th><th>Etapas</th><th>Situação</th><th></th></tr></thead>
-          <tbody></tbody>
-        </table>
-        <div class="vazio" id="empreendimentosVazio" hidden><b>Nenhum empreendimento ainda</b>Cadastre o primeiro em "Novo empreendimento". Ele já nasce com as quatro etapas padrão.</div>
-      </div>
+      <!-- (20/11/2026) um cartao por empreendimento: datas, andamento, etapas e Editar -->
+      <div class="obras-grade" id="listaEmpreendimentos"></div>
+      <div class="cartao vazio" id="empreendimentosVazio" hidden><b>Nenhum empreendimento ainda</b>Cadastre o primeiro em "Novo empreendimento". Ele já nasce com as quatro etapas padrão.</div>
     </section>
 
     <!-- Gestor: Equipe -->
@@ -467,12 +631,8 @@
         <div><h1>Equipe</h1><p>Quem entra no painel e com que papel. Quem sai fica inativo, nunca é apagado.</p></div>
       </div>
       <div class="cartao alerta" id="equipeAviso" hidden></div>
-      <div class="cartao tabela-caixa">
-        <table id="tabelaEquipe">
-          <thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th><th>Situação</th><th></th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
+      <!-- (20/11/2026) uma linha-cartao por pessoa; quem aguarda liberacao vem primeiro, destacado -->
+      <ul class="pessoas" id="listaEquipe"></ul>
     </section>
   </main>
 </div>
@@ -524,10 +684,12 @@
           <div class="campo"><label for="atuMes">Mês</label><select id="atuMes" required></select><span class="dica">O mês a que as fotos se referem. O cliente vê a obra mês a mês.</span></div>
         </div>
         <div class="fotos">
-          <div class="fotos-cabeca"><span>Fotos <span id="atuFotosConta"></span></span><button type="button" class="botao botao--pequeno" id="atuAddFoto">Adicionar fotos</button></div>
+          <div class="fotos-cabeca"><span>Fotos <span id="atuFotosConta"></span></span></div>
           <input type="file" id="atuArquivo" accept="image/*" multiple hidden>
           <div class="fotos-grade" id="atuFotos"></div>
           <div class="fotos-vazio" id="atuFotosVazio">Nenhuma foto. Da galeria ou da câmera; cada uma é reduzida antes de subir.</div>
+          <!-- (20/11/2026) adicionar fotos: uma area grande (no computador, da para arrastar as fotos ate a ficha) -->
+          <button type="button" class="foto-adicionar" id="atuAddFoto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.6-2.5h6.8L17 8.5h3a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z"/><path d="M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg><span><b>Adicionar fotos</b><small>Tire na hora ou escolha da galeria. No computador, pode arrastar até aqui.</small></span></button>
         </div>
         <p class="progresso" id="atuProgresso" aria-live="polite"></p>
         <p class="erro" id="atuErro" role="alert"></p>
@@ -565,6 +727,15 @@
       </aside>
     </div>
   </form>
+</dialog>
+
+<!-- (20/11/2026) o visor: a foto em tela cheia, com setas, contador e as setas do teclado -->
+<dialog id="dlgFoto" class="visor" aria-label="Foto da obra">
+  <button type="button" class="visor-fechar" data-visor="fechar" aria-label="Fechar">&times;</button>
+  <button type="button" class="visor-seta ant" data-visor="-1" aria-label="Foto anterior"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+  <img id="visorImg" alt="">
+  <button type="button" class="visor-seta prox" data-visor="1" aria-label="Próxima foto"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+  <p class="visor-conta" id="visorConta"></p>
 </dialog>
 
 <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
@@ -711,6 +882,10 @@
     document.body.setAttribute('data-papel', p.papel);
     $('usuarioNome').textContent = p.nome;
     $('usuarioPapel').textContent = NOMES.papel[p.papel] || p.papel;
+    // (20/11/2026) o avatar do topo: as iniciais do primeiro e do ultimo nome
+    var partes = String(p.nome || '').trim().split(/\s+/).filter(Boolean);
+    $('usuarioIniciais').textContent = ((partes[0] || '?').charAt(0) + (partes.length > 1 ? partes[partes.length - 1].charAt(0) : '')).toUpperCase();
+    $('usuarioIniciais').title = p.nome + ' · ' + (NOMES.papel[p.papel] || p.papel);
     aplicarPermissoes();
     mostrarTela('app');
     // a aba aberta e o painel escolhido na tela inicial (ir() leva quem nao pode aprovar para a Gestao de obras)
@@ -725,6 +900,8 @@
       var regra = el.getAttribute('data-so');
       el.hidden = regra === 'gestor' ? !eGestor() : regra === 'aprova' ? !podeAprovar() : false;
     });
+    // quantas abas a pessoa ve: com uma so (a obra), o menu fixo de baixo do celular nao aparece
+    $('menu').setAttribute('data-abas', document.querySelectorAll('#menu a:not([hidden])').length);
   }
 
   /* ---- entrar, esqueci a senha, criar conta, criar senha, sair ---- */
@@ -897,7 +1074,6 @@
     select.value = valor || mesAtual();
   }
   var dataCurta = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
-  function cartaoResumo(n, rotulo, cor) { return '<div class="cartao" data-cor="' + cor + '"><span class="num">' + n + '</span><span class="rot">' + esc(rotulo) + '</span></div>'; }
   function etiqueta(status, mapa) { return '<span class="etiqueta" data-status="' + esc(status) + '">' + esc(mapa[status] || status) + '</span>'; }
   function aguardandoAprovacao() { return estado.perfis.filter(function (p) { return !p.ativo && !p.aprovado_em; }); }
 
@@ -908,23 +1084,30 @@
     if (rota === 'empreendimentos') desenharEmpreendimentos();
     if (rota === 'equipe') desenharEquipe();
   }
-  function linhaAtualizacao(a, comQuem) {
-    var emp = empPorId(a.empreendimento_id), et = etapaPorId(a.etapa_id), quem = perfilPorId(a.enviado_por), n = fotosDe(a.id).length;
-    return '<tr data-id="' + a.id + '" tabindex="0">' +
-      '<td><b>' + esc(emp ? emp.nome : '') + '</b></td>' +
-      '<td>' + esc(et ? et.nome : '') + '</td>' +
-      '<td>' + esc(a.titulo) + (a.percentual !== null && a.percentual !== undefined ? ' <small style="color: var(--texto-fraco)">' + a.percentual + '%</small>' : '') + '</td>' +
-      '<td class="inteiro">' + esc(mesCurto(a.data_referencia)) + '</td>' +
-      '<td class="inteiro">' + (n === 0 ? '<span style="color: var(--texto-fraco)">sem foto</span>' : n === 1 ? '1 foto' : n + ' fotos') + '</td>' +
-      (comQuem ? '<td>' + esc(quem ? quem.nome : '') + '</td><td class="inteiro">' + esc(dataCurta.format(new Date(a.criado_em))) + '</td>' : '') +
-      '<td>' + etiqueta(a.situacao, NOMES.situacao) + '</td>' +
-      (comQuem ? '<td><button type="button" class="botao botao--pequeno" data-abrir="' + a.id + '">' + (a.situacao === 'aguardando' && podeAprovar() ? 'Decidir' : 'Abrir') + '</button></td>' : '') +
-    '</tr>';
+  /* ---- (20/11/2026) NOVO VISUAL: cartoes no lugar das tabelas ----
+     O cartao de um envio: miniatura da primeira foto, titulo, obra e etapa, mes e situacao;
+     com ajuste pedido, o pedido do aprovador aparece no proprio cartao. Os cartoes ficam
+     agrupados por mes (o mais recente primeiro), como as linhas da tabela antes. */
+  var ICONE_FOTO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M3 16l5-5 4 4 3-3 6 6"/><path d="M15.5 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>';
+  function cartaoEnvio(a, comQuem) {
+    var emp = empPorId(a.empreendimento_id), et = etapaPorId(a.etapa_id), quem = perfilPorId(a.enviado_por), fotos = fotosDe(a.id), n = fotos.length;
+    var capa = n ? urlDaFoto(fotos[0].caminho) : '';
+    var pct = a.percentual !== null && a.percentual !== undefined;
+    return '<li><button type="button" class="envio" data-id="' + a.id + '" data-situacao="' + esc(a.situacao) + '">' +
+      '<span class="envio-foto">' + (capa ? '<img src="' + esc(capa) + '" alt="" loading="lazy">' : ICONE_FOTO) + (n > 1 ? '<span class="envio-conta">' + n + '</span>' : '') + '</span>' +
+      '<span class="envio-corpo">' +
+        '<span class="envio-titulo">' + esc(a.titulo) + '</span>' +
+        '<span class="envio-meta"><b>' + esc(emp ? emp.nome : '') + '</b>' + (et ? ' · ' + esc(et.nome) : '') + '</span>' +
+        '<span class="envio-meta">' + esc(mesNome(a.data_referencia)) + (pct ? ' · andamento ' + a.percentual + '%' : '') + ' · ' + (n === 0 ? 'sem foto' : n === 1 ? '1 foto' : n + ' fotos') +
+          (comQuem ? ' · ' + esc(quem ? quem.nome : '') + ', ' + esc(dataCurta.format(new Date(a.criado_em))) : '') + '</span>' +
+        (a.observacao_aprovador && (a.situacao === 'ajuste' || a.situacao === 'recusada') ? '<span class="envio-obs" data-situacao="' + esc(a.situacao) + '">' + (a.situacao === 'ajuste' ? 'O aprovador pediu: ' : 'Motivo da recusa: ') + esc(a.observacao_aprovador) + '</span>' : '') +
+      '</span>' +
+      '<span class="envio-lado">' + etiqueta(a.situacao, NOMES.situacao) +
+        (comQuem ? '<span class="botao botao--pequeno" data-abrir="' + a.id + '">' + (a.situacao === 'aguardando' && podeAprovar() ? 'Decidir' : 'Abrir') + '</span>' : '<span class="envio-seta" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>') +
+      '</span>' +
+    '</button></li>';
   }
-  /* as listas vem agrupadas por mes, o mais recente primeiro, com uma linha de
-     titulo a cada mes novo; dentro do mes, a enviada por ultimo primeiro. As
-     linhas de titulo nao tem data-id: tocar nelas nao abre nada. */
-  function linhasPorMes(lista, comQuem, colunas) {
+  function cartoesPorMes(lista, comQuem) {
     var ordenada = lista.slice().sort(function (x, y) {
       var a = mesDe(x.data_referencia), b = mesDe(y.data_referencia);
       if (a !== b) return a < b ? 1 : -1;
@@ -933,27 +1116,65 @@
     var html = '', mesAnterior = null;
     ordenada.forEach(function (a) {
       var m = mesDe(a.data_referencia);
-      if (m !== mesAnterior) { html += '<tr class="grupo-mes"><td colspan="' + colunas + '">' + esc(mesNome(m) || 'Sem mês') + '</td></tr>'; mesAnterior = m; }
-      html += linhaAtualizacao(a, comQuem);
+      if (m !== mesAnterior) { html += (mesAnterior !== null ? '</ul>' : '') + '<h3 class="grupo-mes">' + esc(mesNome(m) || 'Sem mês') + '</h3><ul class="envios-lista">'; mesAnterior = m; }
+      html += cartaoEnvio(a, comQuem);
     });
-    return html;
+    return html + (mesAnterior !== null ? '</ul>' : '');
+  }
+  /* o cartao de uma obra: andamento (o ultimo percentual aprovado), as etapas em segmentos, a
+     previsao de entrega e o envio do mes: se ja foi, a situacao; se nao, o botao para enviar */
+  function andamentoDe(empId) {
+    var aprovadas = estado.atualizacoes.filter(function (a) { return a.empreendimento_id === empId && a.situacao === 'aprovada' && a.percentual !== null && a.percentual !== undefined; });
+    aprovadas.sort(function (x, y) { var a = mesDe(x.data_referencia), b = mesDe(y.data_referencia); return a !== b ? (a < b ? 1 : -1) : (String(x.criado_em) < String(y.criado_em) ? 1 : -1); });
+    return aprovadas.length ? aprovadas[0].percentual : null;
+  }
+  function cartaoObra(e) {
+    var etapas = etapasDe(e.id).slice().sort(function (x, y) { return (x.ordem || 0) - (y.ordem || 0); });
+    var atual = etapas.filter(function (x) { return x.situacao === 'em_andamento'; })[0] || etapas.filter(function (x) { return x.situacao === 'a_fazer'; })[0] || null;
+    var pct = andamentoDe(e.id), mes = mesAtual();
+    var doMes = minhas().filter(function (a) { return a.empreendimento_id === e.id && mesDe(a.data_referencia) === mes; });
+    doMes.sort(function (x, y) { return String(x.criado_em) < String(y.criado_em) ? 1 : -1; });
+    var nomeMes = MESES[parseInt(mes.split('-')[1], 10) - 1].toLowerCase();
+    return '<article class="cartao obra">' +
+      '<div class="obra-cabeca"><div><h3>' + esc(e.nome) + '</h3><span>' + esc([e.cidade, e.previsao_entrega ? 'entrega prevista ' + dataBr(e.previsao_entrega) : ''].filter(Boolean).join(' · ')) + '</span></div>' +
+        (pct === null ? '' : '<b class="obra-pct">' + pct + '%</b>') + '</div>' +
+      '<div class="obra-barra" role="img" aria-label="Andamento ' + (pct === null ? 'ainda não aprovado' : pct + '%') + '"><i style="width:' + (pct || 0) + '%"></i></div>' +
+      '<p class="obra-legenda">' + (pct === null ? 'Andamento ainda sem atualização aprovada' : 'Andamento da última atualização aprovada') + '</p>' +
+      (etapas.length ? '<ol class="obra-etapas">' + etapas.map(function (x) { return '<li data-situacao="' + esc(x.situacao) + '" title="' + esc(x.nome + ': ' + (NOMES.etapa[x.situacao] || x.situacao)) + '"><span class="sr">' + esc(x.nome + ': ' + (NOMES.etapa[x.situacao] || x.situacao)) + '</span></li>'; }).join('') + '</ol>' +
+        '<p class="obra-etapa">' + (atual ? 'Etapa atual: <b>' + esc(atual.nome) + '</b>' : 'Todas as etapas concluídas') + '</p>' : '') +
+      '<div class="obra-mes">' + (doMes.length
+        ? '<span>Envio de ' + nomeMes + ': ' + etiqueta(doMes[0].situacao, NOMES.situacao) + '</span><button type="button" class="botao botao--pequeno" data-nova-emp="' + e.id + '">Enviar mais fotos</button>'
+        : '<button type="button" class="botao botao--cheio obra-enviar" data-nova-emp="' + e.id + '">' + ICONE_FOTO + 'Enviar fotos de ' + nomeMes + '</button>') + '</div>' +
+    '</article>';
   }
   function desenharEnviar() {
     var ativos = estado.empreendimentos.filter(function (e) { return e.ativo; });
     var m = minhas();
-    $('enviarTexto').textContent = ativos.length ? 'As fotos e o andamento da obra, mês a mês, para o cliente ver na Central depois de aprovado. Obras em acompanhamento: ' + ativos.map(function (e) { return e.nome; }).join(', ') + '.' : 'As fotos e o andamento da obra, mês a mês, para o cliente ver na Central depois de aprovado.';
+    $('enviarTexto').textContent = 'As fotos e o andamento da obra, mês a mês, para o cliente ver na Central depois de aprovado.';
+    $('enviarObras').innerHTML = ativos.map(cartaoObra).join('');
+    $('enviarObras').hidden = ativos.length === 0;
+    // os numeros do topo viraram uma linha curta ao lado de "Seus envios" (as classes .num continuam)
     $('enviarResumo').innerHTML =
-      cartaoResumo(ativos.length, ativos.length === 1 ? 'obra em acompanhamento' : 'obras em acompanhamento', '') +
-      cartaoResumo(m.length, m.length === 1 ? 'atualização enviada por você' : 'atualizações enviadas por você', 'azul') +
-      cartaoResumo(contar(m, 'aguardando'), 'aguardando aprovação', 'ambar') +
-      cartaoResumo(contar(m, 'aprovada'), 'aprovadas', 'verde');
+      '<span><b class="num">' + ativos.length + '</b> ' + (ativos.length === 1 ? 'obra' : 'obras') + '</span>' +
+      '<span><b class="num">' + m.length + '</b> ' + (m.length === 1 ? 'enviada' : 'enviadas') + '</span>' +
+      '<span data-cor="ambar"><b class="num">' + contar(m, 'aguardando') + '</b> aguardando</span>' +
+      '<span data-cor="verde"><b class="num">' + contar(m, 'aprovada') + '</b> ' + (contar(m, 'aprovada') === 1 ? 'aprovada' : 'aprovadas') + '</span>';
     // sem obra em acompanhamento nao ha o que enviar
     $('novaAtualizacao').disabled = ativos.length === 0;
-    $('tabelaMinhas').hidden = m.length === 0;
+    $('listaMinhas').hidden = m.length === 0;
     $('minhasVazio').hidden = m.length > 0;
-    $('minhasVazioTexto').textContent = ativos.length === 0 ? (eGestor() ? 'Cadastre um empreendimento em acompanhamento primeiro, na aba Empreendimentos.' : 'Ainda não há obra em acompanhamento. Peça ao gestor para cadastrar o empreendimento.') : 'Toque em "Nova atualização". Ela aparece aqui com a situação: aguardando aprovação, aprovada, ajuste pedido ou recusada.';
-    $('tabelaMinhas').querySelector('tbody').innerHTML = linhasPorMes(m, false, 6);
+    $('minhasVazioTexto').textContent = ativos.length === 0 ? (eGestor() ? 'Cadastre um empreendimento em acompanhamento primeiro, na aba Empreendimentos.' : 'Ainda não há obra em acompanhamento. Peça ao gestor para cadastrar o empreendimento.') : 'Toque em "Enviar fotos" no cartão da obra. O envio aparece aqui com a situação: aguardando aprovação, aprovada, ajuste pedido ou recusada.';
+    $('listaMinhas').innerHTML = cartoesPorMes(m, false);
   }
+  // tocar num cartao de envio abre a ficha; o botao do cartao da obra abre a ficha nova com a obra escolhida
+  ['listaMinhas', 'enviarObras'].forEach(function (id) {
+    $(id).addEventListener('click', function (ev) {
+      var nova = ev.target.closest('[data-nova-emp]');
+      if (nova) { abrirAtualizacao(null, parseInt(nova.getAttribute('data-nova-emp'), 10)); return; }
+      var b = ev.target.closest('.envio[data-id]');
+      if (b) abrirAtualizacao(parseInt(b.getAttribute('data-id'), 10));
+    });
+  });
   var TEXTO_FILA = {
     aguardando: ['Nenhuma atualização aguardando', 'Quando alguém da obra enviar, aparece aqui para você aprovar, pedir ajuste ou recusar.'],
     ajuste: ['Nenhuma com ajuste pedido', 'As atualizações devolvidas para a obra corrigir aparecem aqui até serem reenviadas.'],
@@ -961,33 +1182,31 @@
     recusada: ['Nenhuma recusada', 'O que for recusado fica aqui, com o motivo, no histórico.'],
     '': ['Nenhuma atualização', 'Quando a obra enviar, aparece aqui.']
   };
+  // (20/11/2026) os filtros da fila, na ordem do trabalho: o que espera decisao primeiro
+  var FILTROS = [['aguardando', 'aguardando', 'aguardando'], ['ajuste', 'com ajuste', 'com ajuste'], ['aprovada', 'aprovada', 'aprovadas'], ['recusada', 'recusada', 'recusadas'], ['', 'no total', 'no total']];
   function desenharAprovar() {
     var todas = estado.atualizacoes;
     var filtro = estado.filtroFila;
-    $('filaSituacao').value = filtro;
     var fila = todas.filter(function (a) { return !filtro || a.situacao === filtro; });
-    $('aprovarResumo').innerHTML =
-      cartaoResumo(contar(todas, 'aguardando'), 'aguardando aprovação', 'ambar') +
-      cartaoResumo(contar(todas, 'aprovada'), 'aprovadas', 'verde') +
-      cartaoResumo(contar(todas, 'ajuste'), 'com ajuste pedido', 'azul') +
-      cartaoResumo(contar(todas, 'recusada'), 'recusadas', 'cinza') +
-      cartaoResumo(estado.empreendimentos.filter(function (e) { return e.ativo; }).length, 'obras em acompanhamento', '');
+    var obras = estado.empreendimentos.filter(function (e) { return e.ativo; }).length;
+    $('aprovarTexto').textContent = 'Tudo o que a obra envia passa por aqui antes de chegar ao cliente. Nada é publicado sem alguém da DPR aprovar. ' + (obras === 1 ? '1 obra em acompanhamento.' : obras + ' obras em acompanhamento.');
+    $('aprovarResumo').innerHTML = FILTROS.map(function (f) {
+      var n = f[0] ? contar(todas, f[0]) : todas.length;
+      return '<button type="button" class="filtro" data-filtro="' + f[0] + '" data-cor="' + (f[0] || 'todas') + '" aria-pressed="' + (filtro === f[0] ? 'true' : 'false') + '"><b class="num">' + n + '</b><span>' + (n === 1 ? f[1] : f[2]) + '</span></button>';
+    }).join('');
     var aguardando = aguardandoAprovacao().length;
     var aviso = $('aprovarAvisoEquipe');
     aviso.hidden = !(eGestor() && aguardando > 0);
     if (!aviso.hidden) aviso.innerHTML = '<span><b>' + aguardando + (aguardando === 1 ? ' cadastro aguardando' : ' cadastros aguardando') + '</b> a sua liberação para entrar no painel.</span><a class="botao botao--pequeno" href="#equipe">Ver a equipe</a>';
-    $('tabelaFila').hidden = fila.length === 0;
+    $('listaFila').hidden = fila.length === 0;
     $('filaVazio').hidden = fila.length > 0;
     $('filaVazioTitulo').textContent = TEXTO_FILA[filtro][0];
     $('filaVazioTexto').textContent = TEXTO_FILA[filtro][1];
-    $('tabelaFila').querySelector('tbody').innerHTML = linhasPorMes(fila, true, 9);
+    $('listaFila').innerHTML = cartoesPorMes(fila, true);
   }
-  $('filaSituacao').addEventListener('change', function () { estado.filtroFila = this.value; desenharAprovar(); });
-  // tocar numa linha (ou Enter) abre a ficha
-  ['tabelaMinhas', 'tabelaFila'].forEach(function (id) {
-    $(id).addEventListener('click', function (ev) { var tr = ev.target.closest('tr[data-id]'); if (tr) abrirAtualizacao(parseInt(tr.getAttribute('data-id'), 10)); });
-    $(id).addEventListener('keydown', function (ev) { var tr = ev.target.closest('tr[data-id]'); if (tr && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); abrirAtualizacao(parseInt(tr.getAttribute('data-id'), 10)); } });
-  });
+  $('aprovarResumo').addEventListener('click', function (ev) { var b = ev.target.closest('.filtro'); if (b) { estado.filtroFila = b.getAttribute('data-filtro'); desenharAprovar(); } });
+  // tocar num cartao da fila abre a ficha (o cartao e um botao: Enter e espaco ja funcionam)
+  $('listaFila').addEventListener('click', function (ev) { var b = ev.target.closest('.envio[data-id]'); if (b) abrirAtualizacao(parseInt(b.getAttribute('data-id'), 10)); });
 
   /* ---- a ficha da atualizacao: nova, editar (enquanto aguarda ou esta em
      ajuste) ou so ver. As fotos sobem uma a uma para o Storage, reduzidas no
@@ -1015,7 +1234,7 @@
     else { var atual = lista.filter(function (e) { return e.situacao === 'em_andamento'; })[0]; if (atual) select.value = String(atual.id); }
   }
   function soltarUrls() { fotosNovas.forEach(function (f) { if (f.url && window.URL && URL.revokeObjectURL) { try { URL.revokeObjectURL(f.url); } catch (e) {} } }); }
-  function abrirAtualizacao(id) {
+  function abrirAtualizacao(id, empInicial) {
     var a = id ? atualizacaoPorId(id) : null;
     if (id && !a) return;
     soltarUrls();
@@ -1031,7 +1250,8 @@
     obs.hidden = !(a && a.observacao_aprovador && (a.situacao === 'ajuste' || a.situacao === 'recusada'));
     if (!obs.hidden) { obs.setAttribute('data-situacao', a.situacao); obs.innerHTML = '<b>' + (a.situacao === 'ajuste' ? 'O aprovador pediu ajuste:' : 'Motivo da recusa:') + '</b> ' + esc(a.observacao_aprovador); }
     // campos
-    opcoesEmpreendimentosAtivos($('atuEmpreendimento'), a ? a.empreendimento_id : null);
+    // (20/11/2026) a ficha nova pode vir com a obra escolhida (o botao "Enviar fotos" do cartao da obra)
+    opcoesEmpreendimentosAtivos($('atuEmpreendimento'), a ? a.empreendimento_id : (empInicial || null));
     opcoesEtapasDe($('atuEtapa'), parseInt($('atuEmpreendimento').value, 10), a ? a.etapa_id : null);
     opcoesMeses($('atuMes'), a ? mesDe(a.data_referencia) : null);
     tituloAutomatico = a ? '' : mesNome($('atuMes').value);
@@ -1064,6 +1284,8 @@
       $('atuAprovar').hidden = !pendente; $('atuAjuste').hidden = !pendente; $('atuRecusar').hidden = !pendente;
       $('atuVoltarFila').hidden = pendente;
     }
+    // (20/11/2026) no celular, com decisao pendente, os botoes de decidir ficam presos no rodape
+    $('dlgAtualizacao').classList.toggle('com-decisao', !dec.hidden && !$('atuAprovar').hidden);
     if (a) carregarLinhaAtualizacao(a.id);
     abrir($('dlgAtualizacao'));
     if (edita) $(a ? 'atuTitulo' : 'atuEmpreendimento').focus();
@@ -1115,13 +1337,17 @@
   function desenharFotos() {
     var edita = podeEditarAtualizacao(fichaAberta);
     var existentes = fichaAberta ? fotosDe(fichaAberta.id).filter(function (f) { return fotosParaRemover.indexOf(f.id) < 0; }) : [];
-    var html = existentes.map(function (f) {
-      var url = urlDaFoto(f.caminho);
-      return '<figure class="foto" data-foto="' + f.id + '"><a href="' + esc(url) + '" target="_blank" rel="noopener"><img src="' + esc(url) + '" alt="' + esc(f.legenda || 'Foto da obra') + '" loading="lazy"></a>' + (edita ? '<button type="button" class="foto-tirar" data-tirar-foto="' + f.id + '" aria-label="Tirar esta foto">&times;</button>' : '') + '</figure>';
+    // (20/11/2026) cada foto abre no visor (o link continua para abrir numa aba nova com o botao do meio)
+    visorFotos = existentes.map(function (f) { return urlDaFoto(f.caminho); }).concat(fotosNovas.map(function (f) { return f.url; }));
+    var html = existentes.map(function (f, k) {
+      var url = visorFotos[k];
+      return '<figure class="foto" data-foto="' + f.id + '"><a href="' + esc(url) + '" target="_blank" rel="noopener" data-ver-foto="' + k + '"><img src="' + esc(url) + '" alt="' + esc(f.legenda || 'Foto da obra') + '" loading="lazy"></a>' + (edita ? '<button type="button" class="foto-tirar" data-tirar-foto="' + f.id + '" aria-label="Tirar esta foto">&times;</button>' : '') + '</figure>';
     }).join('') + fotosNovas.map(function (f, k) {
-      return '<figure class="foto foto--nova"><img src="' + esc(f.url) + '" alt="' + esc(f.nome) + '"><button type="button" class="foto-tirar" data-tirar-nova="' + k + '" aria-label="Tirar esta foto">&times;</button></figure>';
+      return '<figure class="foto foto--nova"><a href="' + esc(f.url) + '" data-ver-foto="' + (existentes.length + k) + '"><img src="' + esc(f.url) + '" alt="' + esc(f.nome) + '"></a><button type="button" class="foto-tirar" data-tirar-nova="' + k + '" aria-label="Tirar esta foto">&times;</button></figure>';
     }).join('');
     $('atuFotos').innerHTML = html;
+    // so para ver: a primeira foto em destaque
+    $('atuFotos').classList.toggle('fotos-grade--ver', !edita);
     var total = existentes.length + fotosNovas.length;
     $('atuFotosVazio').hidden = total > 0;
     $('atuFotosVazio').textContent = edita ? 'Nenhuma foto. Da galeria ou da câmera; cada uma é reduzida antes de subir.' : 'Esta atualização não tem foto.';
@@ -1132,6 +1358,23 @@
   $('atuArquivo').addEventListener('change', function () {
     var arquivos = Array.prototype.slice.call(this.files || []);
     this.value = '';
+    adicionarArquivos(arquivos);
+  });
+  // (20/11/2026) arrastar fotos ate a ficha (computador): o mesmo caminho do botao
+  ['dragenter', 'dragover'].forEach(function (tipo) {
+    $('formAtualizacao').addEventListener(tipo, function (ev) {
+      if (!podeEditarAtualizacao(fichaAberta) || !ev.dataTransfer || Array.prototype.indexOf.call(ev.dataTransfer.types || [], 'Files') < 0) return;
+      ev.preventDefault(); $('dlgAtualizacao').classList.add('soltando');
+    });
+  });
+  ['dragleave', 'drop'].forEach(function (tipo) {
+    $('formAtualizacao').addEventListener(tipo, function (ev) {
+      if (tipo === 'dragleave' && ev.relatedTarget && $('formAtualizacao').contains(ev.relatedTarget)) return;
+      $('dlgAtualizacao').classList.remove('soltando');
+      if (tipo === 'drop' && ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files.length) { ev.preventDefault(); adicionarArquivos(Array.prototype.slice.call(ev.dataTransfer.files)); }
+    });
+  });
+  function adicionarArquivos(arquivos) {
     if (!podeEditarAtualizacao(fichaAberta)) return;
     var existentes = fichaAberta ? fotosDe(fichaAberta.id).filter(function (f) { return fotosParaRemover.indexOf(f.id) < 0; }).length : 0;
     var espaco = MAX_FOTOS - existentes - fotosNovas.length;
@@ -1141,13 +1384,42 @@
       fotosNovas.push({ arquivo: arq, nome: arq.name || 'foto', url: window.URL && URL.createObjectURL ? URL.createObjectURL(arq) : '' });
     });
     desenharFotos();
-  });
+  }
   $('atuFotos').addEventListener('click', function (ev) {
     var t = ev.target.closest('[data-tirar-foto]');
     if (t) { ev.preventDefault(); fotosParaRemover.push(parseInt(t.getAttribute('data-tirar-foto'), 10)); desenharFotos(); return; }
     var n = ev.target.closest('[data-tirar-nova]');
-    if (n) { ev.preventDefault(); var k = parseInt(n.getAttribute('data-tirar-nova'), 10); var f = fotosNovas[k]; if (f && f.url && window.URL && URL.revokeObjectURL) { try { URL.revokeObjectURL(f.url); } catch (e) {} } fotosNovas.splice(k, 1); desenharFotos(); }
+    if (n) { ev.preventDefault(); var k = parseInt(n.getAttribute('data-tirar-nova'), 10); var f = fotosNovas[k]; if (f && f.url && window.URL && URL.revokeObjectURL) { try { URL.revokeObjectURL(f.url); } catch (e) {} } fotosNovas.splice(k, 1); desenharFotos(); return; }
+    // tocar na foto abre o visor (Ctrl/Cmd ou o botao do meio continuam abrindo numa aba nova)
+    var v = ev.target.closest('[data-ver-foto]');
+    if (v && !ev.ctrlKey && !ev.metaKey && ev.button === 0) { ev.preventDefault(); verFoto(parseInt(v.getAttribute('data-ver-foto'), 10)); }
   });
+  /* ---- (20/11/2026) o visor de fotos, por cima da ficha ---- */
+  var visorFotos = [], visorIndice = 0;
+  function verFoto(k) {
+    if (!visorFotos.length) return;
+    visorIndice = ((k % visorFotos.length) + visorFotos.length) % visorFotos.length;
+    $('visorImg').src = visorFotos[visorIndice];
+    $('visorImg').alt = 'Foto ' + (visorIndice + 1) + ' de ' + visorFotos.length;
+    $('visorConta').textContent = (visorIndice + 1) + ' de ' + visorFotos.length;
+    $('dlgFoto').classList.toggle('uma-so', visorFotos.length < 2);
+    if (!$('dlgFoto').open) abrir($('dlgFoto'));
+  }
+  $('dlgFoto').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-visor]');
+    if (b) { var o = b.getAttribute('data-visor'); if (o === 'fechar') this.close(); else verFoto(visorIndice + parseInt(o, 10)); return; }
+    if (ev.target === this) this.close();   // tocar fora da foto fecha
+  });
+  $('dlgFoto').addEventListener('keydown', function (ev) {
+    if (ev.key === 'ArrowRight') { ev.preventDefault(); verFoto(visorIndice + 1); }
+    else if (ev.key === 'ArrowLeft') { ev.preventDefault(); verFoto(visorIndice - 1); }
+  });
+  // deslizar o dedo para o lado troca a foto
+  (function () {
+    var x0 = null;
+    $('dlgFoto').addEventListener('touchstart', function (ev) { x0 = ev.touches[0].clientX; }, { passive: true });
+    $('dlgFoto').addEventListener('touchend', function (ev) { if (x0 === null) return; var dx = ev.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 50) verFoto(visorIndice + (dx < 0 ? 1 : -1)); });
+  })();
   $('atuEmpreendimento').addEventListener('change', function () { opcoesEtapasDe($('atuEtapa'), parseInt(this.value, 10), null); });
   function extensaoDe(arq) { var m = /\.([a-z0-9]+)$/i.exec(arq.name || ''); return m ? m[1].toLowerCase() : 'jpg'; }
   /* reduz a foto no navegador (lado maior em LADO_MAXIMO, JPEG). Se o
@@ -1266,23 +1538,24 @@
 
   /* ---- empreendimentos (gestor) ---- */
   function desenharEmpreendimentos() {
-    var corpo = $('tabelaEmpreendimentos').querySelector('tbody');
     $('empreendimentosVazio').hidden = estado.empreendimentos.length > 0;
-    $('tabelaEmpreendimentos').hidden = estado.empreendimentos.length === 0;
-    corpo.innerHTML = estado.empreendimentos.map(function (e) {
-      var ets = etapasDe(e.id), feitas = ets.filter(function (x) { return x.situacao === 'concluida'; }).length;
-      return '<tr data-id="' + e.id + '">' +
-        '<td><b>' + esc(e.nome) + '</b></td>' +
-        '<td>' + esc(e.cidade || '') + '</td>' +
-        '<td class="inteiro">' + esc(dataBr(e.inicio_obra)) + '</td>' +
-        '<td class="inteiro">' + esc(dataBr(e.previsao_entrega)) + '</td>' +
-        '<td class="inteiro">' + (ets.length ? feitas + ' de ' + ets.length + (feitas === 1 ? ' concluída' : ' concluídas') : '') + '</td>' +
-        '<td>' + (e.ativo ? etiqueta('ativo', { ativo: 'Em acompanhamento' }) : etiqueta('inativo', { inativo: 'Encerrado' })) + '</td>' +
-        '<td><div class="acoes"><button type="button" class="botao botao--pequeno" data-editar-emp="' + e.id + '">Editar</button></div></td>' +
-      '</tr>';
+    $('listaEmpreendimentos').hidden = estado.empreendimentos.length === 0;
+    // os em acompanhamento primeiro; os encerrados depois, mais apagados
+    var lista = estado.empreendimentos.slice().sort(function (a, b) { return (a.ativo === b.ativo) ? String(a.nome).localeCompare(String(b.nome), 'pt-BR') : (a.ativo ? -1 : 1); });
+    $('listaEmpreendimentos').innerHTML = lista.map(function (e) {
+      var ets = etapasDe(e.id).slice().sort(function (x, y) { return (x.ordem || 0) - (y.ordem || 0); }), feitas = ets.filter(function (x) { return x.situacao === 'concluida'; }).length;
+      var pct = andamentoDe(e.id);
+      return '<article class="cartao obra emp-cartao' + (e.ativo ? '' : ' encerrado') + '" data-id="' + e.id + '">' +
+        '<div class="obra-cabeca"><div><h3>' + esc(e.nome) + '</h3><span>' + esc(e.cidade || 'Cidade não informada') + '</span></div>' +
+          (e.ativo ? etiqueta('ativo', { ativo: 'Em acompanhamento' }) : etiqueta('inativo', { inativo: 'Encerrado' })) + '</div>' +
+        '<dl class="emp-datas"><div><dt>Início da obra</dt><dd>' + esc(dataBr(e.inicio_obra) || '—') + '</dd></div><div><dt>Previsão de entrega</dt><dd>' + esc(dataBr(e.previsao_entrega) || '—') + '</dd></div><div><dt>Andamento</dt><dd>' + (pct === null ? '—' : pct + '%') + '</dd></div></dl>' +
+        (ets.length ? '<ol class="obra-etapas">' + ets.map(function (x) { return '<li data-situacao="' + esc(x.situacao) + '" title="' + esc(x.nome + ': ' + (NOMES.etapa[x.situacao] || x.situacao)) + '"><span class="sr">' + esc(x.nome + ': ' + (NOMES.etapa[x.situacao] || x.situacao)) + '</span></li>'; }).join('') + '</ol>' +
+          '<p class="obra-etapa">' + feitas + ' de ' + ets.length + (feitas === 1 ? ' etapa concluída' : ' etapas concluídas') + '</p>' : '<p class="obra-etapa">Sem etapas cadastradas</p>') +
+        '<div class="obra-mes"><span></span><button type="button" class="botao botao--pequeno" data-editar-emp="' + e.id + '">Editar</button></div>' +
+      '</article>';
     }).join('');
   }
-  $('tabelaEmpreendimentos').addEventListener('click', function (ev) {
+  $('listaEmpreendimentos').addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-editar-emp]');
     if (b) abrirEmpreendimento(parseInt(b.getAttribute('data-editar-emp'), 10));
   });
@@ -1342,7 +1615,7 @@
 
   /* ---- equipe (gestor): aprovar cadastros, trocar papel, desativar ---- */
   function desenharEquipe() {
-    var corpo = $('tabelaEquipe').querySelector('tbody');
+    var corpo = $('listaEquipe');
     var eu = estado.perfil.user_id;
     var aguardando = aguardandoAprovacao().length;
     var aviso = $('equipeAviso');
@@ -1353,18 +1626,20 @@
     corpo.innerHTML = lista.map(function (p) {
       var souEu = p.user_id === eu;
       var esperando = !p.ativo && !p.aprovado_em;
-      return '<tr data-user="' + esc(p.user_id) + '">' +
-        '<td><b>' + esc(p.nome) + '</b>' + (souEu ? ' <small style="color: var(--texto-fraco)">(você)</small>' : '') + '</td>' +
-        '<td>' + esc(p.email) + '</td>' +
-        '<td>' + (!souEu ? '<select class="papel-sel" data-papel-de="' + esc(p.user_id) + '" aria-label="Papel de ' + esc(p.nome) + '">' + PAPEIS.map(function (x) { return '<option value="' + x + '"' + (x === p.papel ? ' selected' : '') + '>' + NOMES.papel[x] + '</option>'; }).join('') + '</select>' : etiqueta(p.papel, NOMES.papel)) + '</td>' +
-        '<td>' + (esperando ? etiqueta('aguardando', { aguardando: 'Aguardando liberação' }) : !p.ativo ? etiqueta('inativo', { inativo: 'Inativo' }) : etiqueta('ativo', { ativo: 'Ativo' })) + '</td>' +
-        '<td>' + (!souEu ? (esperando
-            ? '<div class="acoes"><button type="button" class="botao botao--pequeno botao--cheio" data-aprovar-de="' + esc(p.user_id) + '">Aprovar</button><button type="button" class="botao botao--pequeno" data-recusar-de="' + esc(p.user_id) + '">Recusar</button></div>'
-            : '<button type="button" class="botao botao--pequeno" data-ativo-de="' + esc(p.user_id) + '" data-ativo="' + (p.ativo ? '1' : '0') + '">' + (p.ativo ? 'Desativar' : 'Reativar') + '</button>') : '') + '</td>' +
-      '</tr>';
+      var partes = String(p.nome || '').trim().split(/\s+/).filter(Boolean);
+      var iniciais = ((partes[0] || '?').charAt(0) + (partes.length > 1 ? partes[partes.length - 1].charAt(0) : '')).toUpperCase();
+      return '<li class="cartao pessoa' + (esperando ? ' esperando' : !p.ativo ? ' inativa' : '') + '" data-user="' + esc(p.user_id) + '">' +
+        '<span class="avatar" aria-hidden="true">' + esc(iniciais) + '</span>' +
+        '<span class="pessoa-quem"><b>' + esc(p.nome) + (souEu ? ' <small>(você)</small>' : '') + '</b><span>' + esc(p.email) + '</span></span>' +
+        '<span class="pessoa-papel">' + (!souEu ? '<select class="papel-sel" data-papel-de="' + esc(p.user_id) + '" aria-label="Papel de ' + esc(p.nome) + '">' + PAPEIS.map(function (x) { return '<option value="' + x + '"' + (x === p.papel ? ' selected' : '') + '>' + NOMES.papel[x] + '</option>'; }).join('') + '</select>' : etiqueta(p.papel, NOMES.papel)) + '</span>' +
+        '<span class="pessoa-situacao">' + (esperando ? etiqueta('aguardando', { aguardando: 'Aguardando liberação' }) : !p.ativo ? etiqueta('inativo', { inativo: 'Inativo' }) : etiqueta('ativo', { ativo: 'Ativo' })) + '</span>' +
+        '<span class="pessoa-acoes">' + (!souEu ? (esperando
+            ? '<button type="button" class="botao botao--pequeno botao--cheio" data-aprovar-de="' + esc(p.user_id) + '">Aprovar</button><button type="button" class="botao botao--pequeno" data-recusar-de="' + esc(p.user_id) + '">Recusar</button>'
+            : '<button type="button" class="botao botao--pequeno" data-ativo-de="' + esc(p.user_id) + '" data-ativo="' + (p.ativo ? '1' : '0') + '">' + (p.ativo ? 'Desativar' : 'Reativar') + '</button>') : '') + '</span>' +
+      '</li>';
     }).join('');
   }
-  $('tabelaEquipe').addEventListener('change', function (ev) {
+  $('listaEquipe').addEventListener('change', function (ev) {
     var s = ev.target.closest('[data-papel-de]');
     if (!s) return;
     var uid = s.getAttribute('data-papel-de');
@@ -1374,7 +1649,7 @@
       recarregar('perfis');
     });
   });
-  $('tabelaEquipe').addEventListener('click', function (ev) {
+  $('listaEquipe').addEventListener('click', function (ev) {
     var ap = ev.target.closest('[data-aprovar-de]');
     if (ap) {
       var uidAp = ap.getAttribute('data-aprovar-de');
